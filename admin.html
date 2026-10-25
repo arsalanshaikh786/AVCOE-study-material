@@ -26,6 +26,9 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 .hide{display:none!important}
 table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid #263056;text-align:left;vertical-align:top}
 .badge{background:#e5484d;border-radius:99px;padding:1px 8px;font-size:12px;margin-left:4px}
+.act{display:flex;gap:4px;justify-content:center;margin-top:10px;flex-wrap:wrap}.act button{padding:5px 8px;font-size:13px;background:#263056}.act button.r{background:#e5484d}
+.vc{display:block;color:#8f9bc4;font-size:12px;margin-top:4px}
+.modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:14px}.modal .card{width:100%;max-width:560px;max-height:85vh;overflow:auto;margin:0}
 #msg{color:#ffb4b4;font-size:13px;margin-top:6px}
 @media(max-width:640px){
  .wrap{padding:12px}input{font-size:16px}
@@ -78,6 +81,9 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;borde
     <div id="p3" class="hide"><div id="rl"></div></div>
 
     <div id="p2" class="hide card">
+      <div class="card" style="margin:0 0 12px;background:#0f1530"><div class="row" style="justify-content:space-between"><b>🎁 Free Trial</b><span id="trst"></span></div>
+        <div class="row" style="margin-top:8px"><button id="trtog" onclick="toggleTrial()">…</button><input id="trh" type="number" min="1" style="width:100px" placeholder="Hours"><span class="sub">hours per user</span><button class="s" onclick="saveTrial()">Save hours</button></div>
+        <p class="sub" style="margin-top:6px">ON: unapproved students can start a one-time trial. OFF: all running trials stop immediately.</p></div>
       <div class="row" style="justify-content:space-between"><h2>Users</h2><button class="s" onclick="loadUsers()">🔄 Refresh</button></div>
       <input id="srch" placeholder="Search name / email" oninput="loadUsers()">
       <div style="overflow:auto"><table id="utable"></table></div>
@@ -85,10 +91,14 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;borde
   </div>
 </div>
 
+<div id="md" class="modal hide" onclick="if(event.target===this)closeModal()"><div class="card">
+  <div class="row" style="justify-content:space-between"><h2 id="mdt" style="margin:0"></h2><button class="s" onclick="closeModal()">✕</button></div>
+  <div id="mdb" style="margin-top:10px"></div></div></div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, updateDoc, deleteDoc, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyBcXm5QQaYCCddVXNgGqTBAszdKEK-0PJQ", authDomain: "multi-service-app-77dd8.firebaseapp.com", projectId: "multi-service-app-77dd8", storageBucket: "multi-service-app-77dd8.appspot.com", messagingSenderId: "123732555482", appId: "1:123732555482:web:ea47c825e0dbb504f597e3" };
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
@@ -116,23 +126,66 @@ window.tab = n => {
   if (n===2) loadUsers(); if (n===3) loadReqs();
 };
 
+let all = [], views = {};
+const kidsOf = id => all.filter(n => n.parent === id);
+const byId = id => all.find(n => n.id === id);
+const pathOf = id => { const t = []; let n = byId(id); while (n) { t.unshift(n.name); n = byId(n.parent); } return t.join(" › "); };
+const descIds = id => kidsOf(id).flatMap(n => [n.id, ...descIds(n.id)]);
+const tot = id => (views[id]||[]).reduce((a,v) => a + (v.count||0), 0);
+const modal = (t,h) => { $("mdt").textContent = t; $("mdb").innerHTML = h; $("md").classList.remove("hide"); };
+window.closeModal = () => $("md").classList.add("hide");
+
 async function load(){
-  const snap = await getDocs(query(collection(db,"nodes"), where("parent","==",cur)));
-  const items = snap.docs.map(d => ({id:d.id, ...d.data()}))
-    .sort((a,b) => (a.type===b.type ? a.name.localeCompare(b.name) : a.type==="folder"?-1:1));
+  const [ns, vs] = await Promise.all([getDocs(collection(db,"nodes")), getDocs(collection(db,"fileViews")).catch(() => ({docs:[]}))]);
+  all = ns.docs.map(d => ({id:d.id, ...d.data()}));
+  views = {}; vs.docs.forEach(d => { const v = d.data(); (views[v.fileId] = views[v.fileId] || []).push(v); });
+  render();
+}
+function render(){
+  const items = kidsOf(cur).sort((a,b) => (a.type===b.type ? a.name.localeCompare(b.name) : a.type==="folder"?-1:1));
   $("grid").innerHTML = "";
   items.forEach(n => {
-    const d = document.createElement("div"); d.className = "item";
-    d.innerHTML = `<div class="i">${n.type==="folder"?"📁":n.kind==="pdf"?"📕":"🖼️"}</div>${esc(n.name)}<small>${n.type==="folder"?"Folder":n.kind.toUpperCase()}</small>`;
-    if (n.type==="folder") d.onclick = () => { trail.push({id:n.id,name:n.name}); cur = n.id; load(); };
-    const x = document.createElement("button"); x.className = "x r"; x.textContent = "✕";
-    x.onclick = e => { e.stopPropagation(); delNode(n); }; d.appendChild(x);
-    $("grid").appendChild(d);
+    const d = document.createElement("div"); d.className = "item"; const f = n.type === "file";
+    d.innerHTML = `<div class="i">${n.type==="folder"?"📁":n.kind==="pdf"?"📕":"🖼️"}</div>${esc(n.name)}<small>${f ? n.kind.toUpperCase() : kidsOf(n.id).length + " items"}</small>` + (f ? `<span class="vc">👁 ${tot(n.id)} opens • ${(views[n.id]||[]).length} users</span>` : "");
+    if (!f) d.onclick = () => { trail.push({id:n.id,name:n.name}); cur = n.id; render(); };
+    else d.onclick = () => showViews(n);
+    const act = document.createElement("div"); act.className = "act";
+    const mk = (t,title,fn,cls) => { const b = document.createElement("button"); b.textContent = t; b.title = title; if (cls) b.className = cls; b.onclick = e => { e.stopPropagation(); fn(n); }; act.appendChild(b); };
+    if (f) mk("👁","Who opened", showViews);
+    mk("✏️","Rename", rename); mk("📂","Move", x => pick(x,"move")); mk("📋","Copy", x => pick(x,"copy")); mk("✕","Delete", delNode, "r");
+    d.appendChild(act); $("grid").appendChild(d);
   });
   $("empty").textContent = items.length ? "" : "This folder is empty. Add a folder, file or link above.";
   $("crumb").innerHTML = trail.map((t,i) => `<b onclick="goTo(${i})">${esc(t.name)}</b>`).join(" › ");
 }
-window.goTo = i => { trail = trail.slice(0,i+1); cur = trail[i].id; load(); };
+window.goTo = i => { trail = trail.slice(0,i+1); cur = trail[i].id; render(); };
+async function rename(n){
+  const nm = prompt("New name:", n.name); if (!nm || !nm.trim() || nm.trim() === n.name) return;
+  await updateDoc(doc(db,"nodes",n.id), { name:nm.trim() }); load();
+}
+function pick(n, mode){
+  const bad = new Set(n.type === "folder" ? [n.id, ...descIds(n.id)] : []);
+  const opts = [{id:"root", label:"🏠 Home (root)"}, ...all.filter(f => f.type==="folder" && !bad.has(f.id)).map(f => ({id:f.id, label:"📁 " + pathOf(f.id)})).sort((a,b) => a.label.localeCompare(b.label))];
+  modal((mode==="move" ? "Move" : "Copy") + ` “${n.name}” to…`, opts.map(o => `<button class="s" style="width:100%;text-align:left;margin:4px 0" data-id="${o.id}">${esc(o.label)}</button>`).join(""));
+  $("mdb").querySelectorAll("button").forEach(b => b.onclick = async () => {
+    closeModal(); const dest = b.dataset.id;
+    if (mode === "move") { if (dest === n.parent) return; await updateDoc(doc(db,"nodes",n.id), { parent:dest }); }
+    else await cloneNode(n, dest, dest === n.parent ? n.name + " (copy)" : null);
+    load();
+  });
+}
+async function cloneNode(n, parent, nm){
+  const { id, createdAt, ...rest } = n;
+  const r = await addDoc(collection(db,"nodes"), { ...rest, name: nm || n.name, parent, createdAt: serverTimestamp() });
+  if (n.type === "folder") for (const k of kidsOf(n.id)) await cloneNode(k, r.id);
+}
+function showViews(n){
+  const v = [...(views[n.id]||[])].sort((a,b) => (b.count||0) - (a.count||0));
+  const t = (x) => x.last?.toMillis ? new Date(x.last.toMillis()).toLocaleString() : "—";
+  modal("👁 " + n.name, `<p class="sub">${tot(n.id)} total opens • ${v.length} unique users</p>` + (v.length
+    ? `<div style="overflow:auto"><table><tr><th>Name</th><th>Email</th><th>Opens</th><th>Last opened</th></tr>${v.map(x => `<tr><td>${esc(x.name||"—")}</td><td>${esc(x.email||"")}</td><td><b>${x.count||0}</b></td><td>${t(x)}</td></tr>`).join("")}</table></div>`
+    : '<p class="sub" style="margin-top:10px">No one has opened this yet.</p>'));
+}
 
 window.newFolder = async () => {
   const name = prompt("Folder name (e.g. Maths-1, Notes, PYQ, Question Bank):"); if (!name) return;
@@ -158,8 +211,10 @@ window.addLink = async () => {
   await addDoc(collection(db,"nodes"), { name:name.trim(), type:"file", kind, url:url.trim(), parent:cur, createdAt:serverTimestamp() }); load();
 };
 async function delNode(n){
-  if (!confirm(`"${n.name}" – delete this item?` + (n.type==="folder" ? "\n(Items inside must be deleted separately)" : ""))) return;
-  await deleteDoc(doc(db,"nodes",n.id)); load();
+  const ids = n.type === "folder" ? descIds(n.id) : [];
+  if (!confirm(`Delete "${n.name}"` + (ids.length ? ` and ${ids.length} item(s) inside it` : "") + "?")) return;
+  for (const id of [...ids, n.id]) await deleteDoc(doc(db,"nodes",id));
+  load();
 }
 
 window.loadReqs = async () => {
@@ -184,18 +239,33 @@ async function pendingCount(){
   const s = await getDocs(query(collection(db,"users"), where("approved","==",false)));
   $("pc").textContent = s.size; $("pc").classList.toggle("hide", !s.size);
 }
+let trialCfg = { enabled:false, hours:24 };
+async function loadTrial(){
+  try { const d = await getDoc(doc(db,"studySettings","trial")); if (d.exists()) trialCfg = { enabled:!!d.data().enabled, hours:+d.data().hours || 24 }; } catch(e){}
+  $("trh").value = trialCfg.hours; $("trst").textContent = trialCfg.enabled ? "🟢 ON" : "🔴 OFF";
+  $("trtog").textContent = trialCfg.enabled ? "Turn OFF" : "Turn ON"; $("trtog").className = trialCfg.enabled ? "r" : "g";
+}
+window.toggleTrial = async () => { await setDoc(doc(db,"studySettings","trial"), { enabled:!trialCfg.enabled, hours:trialCfg.hours }, { merge:true }); loadUsers(); };
+window.saveTrial = async () => { const h = +$("trh").value; if (!(h > 0)) return alert("Enter valid hours"); await setDoc(doc(db,"studySettings","trial"), { enabled:trialCfg.enabled, hours:h }, { merge:true }); loadUsers(); };
+const stText = u => {
+  if (u.approved) return "✅ Approved";
+  const t = u.trialStarted?.toMillis?.(); if (!t) return "⏳ Pending";
+  const l = t + trialCfg.hours*36e5 - Date.now();
+  return trialCfg.enabled && l > 0 ? `🎁 Trial (${Math.floor(l/36e5)}h ${Math.floor(l%36e5/6e4)}m left)` : "⌛ Trial ended • Pending";
+};
 window.loadUsers = async () => {
+  await loadTrial();
   const q = $("srch").value.toLowerCase();
   const snap = await getDocs(collection(db,"users"));
   let h = "<tr><th>Name</th><th>Email</th><th>Device</th><th>Status</th><th>Action</th></tr>";
   snap.docs.map(d => ({id:d.id, ...d.data()}))
     .filter(u => (u.name+u.email).toLowerCase().includes(q))
-    .sort((a,b) => a.approved - b.approved)
+    .sort((a,b) => { const act = u => (!u.approved || (u.pendingDevice && u.pendingDevice !== u.deviceId)) ? 0 : 1; return act(a)-act(b) || (b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0); })
     .forEach(u => {
       const np = u.pendingDevice && u.pendingDevice !== u.deviceId;
       h += `<tr><td>${esc(u.name||"")}</td><td>${esc(u.email)}</td>
       <td>${esc(u.deviceId)}${np?`<br><small style="color:#ffb86b">New: ${esc(u.pendingDevice)}</small>`:""}</td>
-      <td>${u.approved?"✅ Approved":"⏳ Pending"}</td>
+      <td>${stText(u)}</td>
       <td><div class="row"><button class="${u.approved?"r":""}" onclick="setAp('${u.id}',${!u.approved})">${u.approved?"Block":"Approve"}</button>
       ${np?`<button class="g" onclick="setDev('${u.id}','${esc(u.pendingDevice)}')">Approve New Device</button>`:""}</div></td></tr>`;
     });
