@@ -25,8 +25,8 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 .code{font:700 22px monospace;letter-spacing:2px;background:#0b1020;padding:12px;border-radius:9px;text-align:center;margin:10px 0;color:#7fe0a0}
 .hide{display:none!important}
 #viewer{position:fixed;inset:0;background:#000;z-index:50;overflow:auto}
-#vbar{position:sticky;top:0;z-index:5;background:#151b33;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-#vbar button{padding:8px 11px;font-size:13px}#vtitle{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vbar{position:sticky;top:0;z-index:5;background:#151b33;padding:4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#vbar button{padding:5px 9px;font-size:13px;border-radius:7px}#vtitle{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #zl{min-width:44px;text-align:center;font-size:13px}
 #pages{width:100%;margin:0 auto}#pages canvas{display:block;margin:10px 0;width:100%;height:auto;pointer-events:none}
 #pages.night canvas{filter:invert(1) hue-rotate(180deg)}
@@ -35,15 +35,16 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 #shield{position:fixed;inset:0;background:#000;z-index:99;display:flex;align-items:center;justify-content:center;font-size:18px}
 #msg{color:#ffb4b4;font-size:13px;margin-top:6px}
 #viewer{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
-#vbar{padding-top:max(8px,env(safe-area-inset-top))}
+#vbar{padding-top:max(4px,env(safe-area-inset-top))}
+#vtog{position:fixed;top:max(6px,env(safe-area-inset-top));right:8px;z-index:6;opacity:.55;padding:4px 12px;border-radius:99px;font-size:14px}#vtog:hover,#vtog:active{opacity:1}
 @media(max-width:640px){
  .wrap{padding:12px}input{font-size:16px}
  .grid{grid-template-columns:repeat(2,1fr)}.item{padding:14px 8px}
  #login .row button{flex:1 1 45%}#pending .row button{flex:1 1 100%}
  .code{font-size:20px}
  #vbar{padding-left:8px;padding-right:8px}#vbar .t{display:none}
- #vbar button{padding:11px 12px;font-size:16px;min-width:42px}
- #vtitle{max-width:100%;width:100%;font-size:13px}
+ #vbar button{padding:7px 10px;font-size:15px;min-width:38px}
+ #vtitle{display:none}
  #vbar .row{width:100%;justify-content:space-between;gap:4px;flex-wrap:nowrap}
  #wm{font-size:11px}
 }
@@ -99,8 +100,10 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
       <button class="s" id="nmb" onclick="nightMode()" title="Night mode">🌙<span class="t"> Night</span></button>
       <button class="s" id="wlb" onclick="keepOn()" title="Keep screen on">💡<span class="t"> Screen On: OFF</span></button>
       <button class="s" onclick="fs()" title="Fullscreen">⛶<span class="t"> Fullscreen</span></button>
+      <button class="s" onclick="hideBar()" title="Hide bar">⌃</button>
       <button class="r" onclick="closeViewer()" title="Close">✕<span class="t"> Close</span></button>
     </div></div>
+  <button id="vtog" class="s hide" onclick="showBar()" title="Show menu">⌄ Menu</button>
   <div id="wm"></div>
   <div id="pages"></div>
 </div>
@@ -141,7 +144,7 @@ window.doLogin = async () => { try { await signInWithEmailAndPassword(auth, $("e
 window.doReset = async () => { try { await sendPasswordResetEmail(auth, $("em").value); err("Password reset email sent"); } catch(e){ err("Enter your email first"); } };
 window.doLogout = () => signOut(auth).then(()=>location.reload());
 window.sendWA = () => {
-  const t = `Hello Admin, I need access to the AVCOE Study Material.\nName: ${me?.name||""}\nEmail: ${auth.currentUser.email}\nDevice Code: ${dev}`;
+  const t = `Hello Admin, ${me && me.deviceId !== dev && me.approved ? "I am logging in from a NEW DEVICE and need approval." : "I need access to the AVCOE Study Material."}\nName: ${me?.name||""}\nEmail: ${auth.currentUser.email}\nDevice Code: ${dev}`;
   window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(t)}`, "_blank");
 };
 
@@ -218,6 +221,9 @@ async function openFile(n){
     }
   } catch(e){ $("pages").innerHTML = `<p style='padding:30px;text-align:center'>Could not load the file.<br><small>${esc(e.message||"Access or network error")}</small></p>`; }
 }
+window.hideBar = () => { $("vbar").classList.add("hide"); $("vtog").classList.remove("hide"); };
+window.showBar = () => { $("vbar").classList.remove("hide"); $("vtog").classList.add("hide"); };
+$("pages").addEventListener("click", () => $("vbar").classList.contains("hide") ? showBar() : hideBar());
 let zm = 100, wl = null, wantWake = false;
 const applyZ = () => { $("pages").style.width = zm + "%"; $("zl").textContent = zm + "%"; };
 window.zoom = d => { zm = Math.max(50, Math.min(300, zm + d)); applyZ(); };
@@ -239,6 +245,7 @@ window.fs = () => {
   if (f) f.call(v); else alert("Fullscreen is not supported in this browser");
 };
 window.closeViewer = () => {
+  showBar();
   wantWake = false; if (wl) { wl.release(); wl = null; } wlUi();
   if (document.fullscreenElement) document.exitFullscreen();
   zm = 100; applyZ(); $("pages").classList.remove("night"); $("nmb").innerHTML = '🌙<span class="t"> Night</span>'; $("viewer").classList.add("hide"); $("pages").innerHTML = ""; document.body.style.overflow = ""; };
