@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>AVCOE 1st Year – Study Material</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6c8cff">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="AVCOE Study">
+<link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -109,7 +114,7 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 
 <div id="app" class="hide">
   <header class="top"><div class="brand"><div class="logo">🎓</div><div><b>AVCOE</b><small>1st Year Study Hub</small></div></div>
-    <div class="row"><button class="s" id="thb" onclick="theme()">🌙</button><button class="s" onclick="doLogout()">⎋ Logout</button></div></header>
+    <div class="row"><button class="s hide" id="inst" onclick="installApp()">📲 Install</button><button class="s" id="thb" onclick="theme()">🌙</button><button class="s" onclick="doLogout()">⎋ Logout</button></div></header>
   <div class="wrap">
     <div class="hero" id="hero"><h1 id="hi"></h1><p class="sub" style="color:inherit;opacity:.8;margin-top:4px">What are you studying today?</p>
       <span class="chip" id="st1"></span><span class="chip" id="st2"></span></div>
@@ -396,6 +401,18 @@ document.addEventListener("visibilitychange", () => sh(document.hidden));
 window.addEventListener("blur", () => sh(true));
 window.addEventListener("focus", () => sh(false));
 document.addEventListener("copy", e => e.preventDefault());
+</script>
+<script>
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+let dp = null;
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); dp = e; if (!standalone) document.getElementById("inst").classList.remove("hide"); });
+if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) document.getElementById("inst").classList.remove("hide");
+function installApp(){
+  if (dp) { dp.prompt(); dp.userChoice.then(() => { dp = null; document.getElementById("inst").classList.add("hide"); }); }
+  else alert("iPhone: tap the Share button, then 'Add to Home Screen'.");
+}
+addEventListener("appinstalled", () => document.getElementById("inst").classList.add("hide"));
 </script>
 </body>
 </html>
