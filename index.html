@@ -41,7 +41,6 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 @keyframes up{from{opacity:0;transform:translateY(12px)}}
 .item .i{font-size:38px;margin-bottom:6px}.nm{font-weight:600;font-size:14px}.item small{display:block;color:var(--m);margin-top:4px;font-size:12px}
 .fv{position:absolute;top:6px;right:6px;background:none!important;padding:2px 6px;font-size:18px;color:var(--m)}.fv.on{color:#ffc53d}
-.sv{position:absolute;bottom:8px;right:10px;font-size:13px}
 .nw{position:absolute;top:10px;left:10px;background:#25d366;color:#04210f;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px}
 .sk{height:130px;border-radius:18px;background:linear-gradient(90deg,var(--c),var(--c2),var(--c));background-size:200% 100%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
 .crumb{color:var(--m);font-size:14px;margin:14px 0 10px}.crumb b{color:var(--p);cursor:pointer}
@@ -118,7 +117,6 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 </div>
 
 <div id="app" class="hide">
-  <div id="offbar" class="hide" style="background:#ffb86b;color:#2a1a00;text-align:center;padding:7px;font-size:13px;font-weight:600">📴 Offline mode — only saved material (📶) can be opened</div>
   <header class="top"><div class="brand"><div class="logo">🎓</div><div><b>AVCOE</b><small>1st Year Study Hub</small></div></div>
     <div class="row"><button class="s hide" id="inst" onclick="installApp()">📲 Install</button><button class="s" id="thb" onclick="theme()">🌙</button><button class="s" onclick="doLogout()">⎋ Logout</button></div></header>
   <div class="wrap">
@@ -138,7 +136,6 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
     <div class="card row" style="justify-content:space-between;margin-top:26px"><div><b>📩 Can't find what you need?</b><div class="sub">Request any notes, paper or question bank — admin will add it.</div></div><button onclick="openReq()">Request Material</button></div>
   </div>
 </div>
-<p class="sub" style="text-align:center;margin:0 0 30px" id="offfoot"></p>
 <div class="toast" id="toast"></div>
 <div id="rq" class="modal hide" onclick="if(event.target===this)closeReq()"><div class="card">
   <h2>📩 Request Study Material</h2><p class="sub">Tell us what is missing. You will see its status below.</p><br>
@@ -169,10 +166,10 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getDocFromCache, getDocsFromCache, doc, setDoc, getDoc, updateDoc, increment, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, increment, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyBcXm5QQaYCCddVXNgGqTBAszdKEK-0PJQ", authDomain: "multi-service-app-77dd8.firebaseapp.com", projectId: "multi-service-app-77dd8", storageBucket: "multi-service-app-77dd8.appspot.com", messagingSenderId: "123732555482", appId: "1:123732555482:web:ea47c825e0dbb504f597e3" };
-const app = initializeApp(firebaseConfig), auth = getAuth(app), db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
 
 // ⚠️ admin.html mein bhi yahi email rakhna
 const ADMINS = ["admin@gmail.com"];
@@ -211,7 +208,7 @@ window.doSignup = async () => {
 };
 window.doLogin = async () => { try { await signInWithEmailAndPassword(auth, $("em").value, $("pw").value); } catch(e){ err("Wrong email or password"); } };
 window.doReset = async () => { try { await sendPasswordResetEmail(auth, $("em").value); err("Password reset email sent"); } catch(e){ err("Enter your email first"); } };
-window.doLogout = async () => { try { await clearOffline(); } catch(e){} signOut(auth).then(()=>location.reload()); };
+window.doLogout = () => signOut(auth).then(()=>location.reload());
 window.sendWA = () => {
   const t = `Hello Admin, ${me && me.deviceId !== dev && me.approved ? "I am logging in from a NEW DEVICE and need approval." : "I have paid ₹15 for lifetime access to the AVCOE Study Material. Payment screenshot attached."}\nName: ${me?.name||""}\nEmail: ${auth.currentUser.email}\nDevice Code: ${dev}`;
   window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(t)}`, "_blank");
@@ -221,11 +218,9 @@ onAuthStateChanged(auth, async u => {
   if (!u) return show("login");
   if (ADMINS.includes(u.email)) { me = {name:"Admin"}; return enter(); }
   const r = doc(db,"users",u.uid);
-  let s = await withCache(() => getDoc(r), () => getDocFromCache(r));
+  let s = await getDoc(r);
   if (!s.exists()) { await setDoc(r, { name:u.email.split("@")[0], email:u.email, deviceId:dev, approved:false, createdAt:serverTimestamp() }); s = await getDoc(r); }
   me = s.data();
-  if (!s.metadata.fromCache) { localStorage.lastOk = Date.now(); if (!me.approved || me.deviceId !== dev) clearOffline(); }
-  else if (Date.now() - (+localStorage.lastOk || 0) > 30*864e5) { alert("Please connect to the internet to refresh your access."); return show("login"); }
   $("paybox").classList.toggle("hide", !!me.approved);
   $("wab").textContent = me.approved ? "📲 Request Access on WhatsApp" : "📲 Send Payment Screenshot on WhatsApp";
   if (me.deviceId !== dev) {
@@ -261,7 +256,7 @@ window.startTrial = async () => {
 };
 window.upgrade = () => { $("trialbox").classList.add("hide"); $("trialend").classList.add("hide"); $("tb").classList.remove("hide"); show("pending"); };
 window.backToApp = () => show("app");
-function enter(){ netUi(); refreshSaved(); navigator.storage?.persist?.(); $("offfoot").innerHTML = '📶 Saved offline: <span id="offsz">0</span> file(s) • <span class="lnk" onclick="clearOffline(true)">Clear</span>'; show("app"); $("hi").textContent = "Hi, " + (me.name || "there") + " 👋"; load(); checkReq(); }
+function enter(){ show("app"); $("hi").textContent = "Hi, " + (me.name || "there") + " 👋"; load(); checkReq(); }
 
 let all = [], q = "", curFile = null, fav = new Set(JSON.parse(localStorage.fav || "[]"));
 const hue = t => { let h = 0; for (const c of t) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
@@ -275,50 +270,15 @@ const sorter = (a,b) => a.type===b.type ? a.name.localeCompare(b.name) : a.type=
 function cardEl(n, i){
   const d = document.createElement("div"); d.className = "item"; d.style.setProperty("--h", hue(n.name)); d.style.animationDelay = Math.min(i,12)*30 + "ms";
   const isNew = Date.now() - ts(n) < 7*864e5 && ts(n);
-  d.innerHTML = `<button class="fv ${fav.has(n.id)?"on":""}" onclick="tf(event,'${n.id}')">★</button>${isNew?'<span class="nw">NEW</span>':""}${saved.has(n.id) ? '<span class="sv">📶</span>' : ""}<div class="i">${ico(n)}</div><div class="nm">${esc(n.name)}</div><small>${n.type==="folder" ? cnt(n.id)+" files" : n.kind.toUpperCase()}</small>`;
-  if (n.type === "file" && !navigator.onLine && !saved.has(n.id)) d.style.opacity = ".4";
-  d.onclick = () => n.type==="folder" ? go(n.id) : (!navigator.onLine && !saved.has(n.id) ? toast("Not saved offline — open it once while online") : openFile(n));
+  d.innerHTML = `<button class="fv ${fav.has(n.id)?"on":""}" onclick="tf(event,'${n.id}')">★</button>${isNew?'<span class="nw">NEW</span>':""}<div class="i">${ico(n)}</div><div class="nm">${esc(n.name)}</div><small>${n.type==="folder" ? cnt(n.id)+" files" : n.kind.toUpperCase()}</small>`;
+  d.onclick = () => n.type==="folder" ? go(n.id) : openFile(n);
   return d;
 }
 const fill = (el, list) => { el.innerHTML = ""; list.forEach((n,i) => el.appendChild(cardEl(n,i))); };
-async function withCache(online, cache){
-  if (!navigator.onLine) return cache();
-  try { return await Promise.race([online(), new Promise((_, rej) => setTimeout(rej, 6000))]); } catch(e){ return cache(); }
-}
-const idb = new Promise((res, rej) => { const r = indexedDB.open("avcoe", 1); r.onupgradeneeded = () => { r.result.createObjectStore("f"); r.result.createObjectStore("k"); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-const tx = (st, mode, fn) => idb.then(d => new Promise((res, rej) => { const t = d.transaction(st, mode), q = fn(t.objectStore(st)); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }));
-let saved = new Set();
-const canOffline = () => me && me.approved === true;
-async function getKey(){
-  let k = await tx("k","readonly", s => s.get("k"));
-  if (!k) { k = await crypto.subtle.generateKey({ name:"AES-GCM", length:256 }, false, ["encrypt","decrypt"]); await tx("k","readwrite", s => s.put(k,"k")); }
-  return k;
-}
-async function saveOffline(n, buf){
-  try {
-    const key = await getKey(), iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, key, buf);
-    await tx("f","readwrite", s => s.put({ iv, ct, t:Date.now() }, n.id)); saved.add(n.id); $("offsz").textContent = saved.size;
-  } catch(e){}
-}
-async function loadOffline(id){
-  try { const r = await tx("f","readonly", s => s.get(id)); return r ? await crypto.subtle.decrypt({ name:"AES-GCM", iv:r.iv }, await getKey(), r.ct) : null; } catch(e){ return null; }
-}
-async function refreshSaved(){ try { saved = new Set(await tx("f","readonly", s => s.getAllKeys())); } catch(e){} $("offsz").textContent = saved.size; }
-window.clearOffline = async ui => { try { await tx("f","readwrite", s => s.clear()); } catch(e){} saved = new Set(); if ($("offsz")) $("offsz").textContent = 0; if (ui) { toast("Offline files cleared"); render(); } };
-async function getBuf(n){
-  if (!navigator.onLine) { const b = await loadOffline(n.id); if (b) return b; throw new Error("Not saved for offline. Open it once while online."); }
-  try {
-    const r = await fetch(n.url); if (!r.ok) throw new Error("HTTP " + r.status);
-    const b = await r.arrayBuffer(); if (canOffline()) saveOffline(n, b.slice(0)); return b;
-  } catch(e){ const b = await loadOffline(n.id); if (b) return b; throw e; }
-}
-const netUi = () => { $("offbar").classList.toggle("hide", navigator.onLine); if (!$("app").classList.contains("hide")) render(); };
-addEventListener("online", netUi); addEventListener("offline", netUi);
 async function load(force){
   if (force || !all.length) {
     $("grid").innerHTML = Array(6).fill('<div class="sk"></div>').join("");
-    const nc = collection(db,"nodes"); all = (await withCache(() => getDocs(nc), () => getDocsFromCache(nc))).docs.map(d => ({id:d.id, ...d.data()}));
+    all = (await getDocs(collection(db,"nodes"))).docs.map(d => ({id:d.id, ...d.data()}));
   }
   render();
 }
@@ -402,11 +362,11 @@ async function openFile(n){
   };
   try {
     if (n.kind !== "pdf") {
-      const ib = await getBuf(n);
-      $("pages").innerHTML = ""; await addImg(new Blob([ib]));
+      const r = await fetch(n.url); if (!r.ok) throw new Error("HTTP " + r.status);
+      $("pages").innerHTML = ""; await addImg(await r.blob());
     } else {
       let direct = true, buf;
-      try { buf = await getBuf(n); } catch(e){ if (!navigator.onLine) throw e; direct = false; }
+      try { const r = await fetch(n.url); if (!r.ok) throw 0; buf = await r.arrayBuffer(); } catch(e){ direct = false; }
       $("pages").innerHTML = "";
       if (direct) {
         const pdf = await pdfjsLib.getDocument({ data:new Uint8Array(buf) }).promise;
@@ -473,6 +433,8 @@ window.addEventListener("focus", () => sh(false));
 document.addEventListener("copy", e => e.preventDefault());
 </script>
 <script>
+// one-time cleanup of the removed offline feature (old saved files / keys on this device)
+try { indexedDB.deleteDatabase("avcoe"); localStorage.removeItem("lastOk"); } catch(e){}
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 let dp = null;
 const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
