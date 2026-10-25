@@ -92,6 +92,9 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
   <div class="card" style="margin-top:8vh">
     <h2 id="ptitle">⏳ Approval pending</h2>
     <p class="sub" id="ptext">Send your Device Code to the admin to get access. Refresh after you are approved.</p>
+    <div id="trialbox" class="hide card" style="background:var(--c2);text-align:center;margin:14px 0"><b style="font-size:18px">🎁 Try it free first</b>
+      <p class="sub" id="trialtxt" style="margin:6px 0 12px"></p><button onclick="startTrial()">Start Free Trial</button></div>
+    <p class="hide" id="trialend" style="color:#ffb86b;margin:10px 0;font-size:14px">⌛ Your free trial is over. Pay ₹15 once for lifetime access.</p>
     <div id="paybox" class="hide">
       <div class="card" style="background:var(--c2);text-align:center;margin:14px 0">
         <b style="font-size:19px">💳 Pay ₹15 — Lifetime Access</b>
@@ -105,6 +108,7 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
     <div class="code" id="devcode"></div>
     <div class="row">
       <button class="g" id="wab" onclick="sendWA()">📲 Request Access on WhatsApp</button>
+      <button class="s hide" id="tb" onclick="backToApp()">← Back to app</button>
       <button class="s" onclick="location.reload()">Refresh</button>
       <button class="s" onclick="doLogout()">Logout</button>
     </div>
@@ -116,6 +120,7 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
   <header class="top"><div class="brand"><div class="logo">🎓</div><div><b>AVCOE</b><small>1st Year Study Hub</small></div></div>
     <div class="row"><button class="s hide" id="inst" onclick="installApp()">📲 Install</button><button class="s" id="thb" onclick="theme()">🌙</button><button class="s" onclick="doLogout()">⎋ Logout</button></div></header>
   <div class="wrap">
+    <div id="trialbar" class="card row hide" style="justify-content:space-between;margin:0 0 12px;padding:12px 16px"><b id="trialtime">🎁 Free trial</b><button onclick="upgrade()">Get Lifetime ₹15</button></div>
     <div class="hero" id="hero"><h1 id="hi"></h1><p class="sub" style="color:inherit;opacity:.8;margin-top:4px">What are you studying today?</p>
       <span class="chip" id="st1"></span><span class="chip" id="st2"></span></div>
     <input id="q" placeholder="🔍 Search notes, papers, subjects…">
@@ -161,7 +166,7 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, increment, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyBcXm5QQaYCCddVXNgGqTBAszdKEK-0PJQ", authDomain: "multi-service-app-77dd8.firebaseapp.com", projectId: "multi-service-app-77dd8", storageBucket: "multi-service-app-77dd8.appspot.com", messagingSenderId: "123732555482", appId: "1:123732555482:web:ea47c825e0dbb504f597e3" };
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
@@ -224,10 +229,33 @@ onAuthStateChanged(auth, async u => {
     if (me.pendingDevice !== dev) await updateDoc(r, { pendingDevice: dev });
     return show("pending");
   }
-  if (!me.approved) return show("pending");
+  if (!me.approved) {
+    await loadTrialCfg(); calcTrial();
+    if (trialLeft() > 0) return enterTrial();
+    const started = !!me.trialStarted;
+    $("trialbox").classList.toggle("hide", !(trialCfg.enabled && !started));
+    $("trialtxt").textContent = `Get ${trialCfg.hours} hour(s) of full access, free. One-time per account.`;
+    $("trialend").classList.toggle("hide", !started);
+    return show("pending");
+  }
   enter();
 });
 
+let trialCfg = { enabled:false, hours:24 }, trialEnd = 0, tmr;
+const trialLeft = () => trialEnd - Date.now();
+async function loadTrialCfg(){ try { const d = await getDoc(doc(db,"studySettings","trial")); if (d.exists()) trialCfg = { enabled:!!d.data().enabled, hours:+d.data().hours || 24 }; } catch(e){} }
+function calcTrial(){ const t = me.trialStarted?.toMillis?.(); trialEnd = (trialCfg.enabled && t) ? t + trialCfg.hours*36e5 : 0; }
+function tick(){ const l = trialLeft(); if (l <= 0) return location.reload(); const m = Math.floor(l/6e4); $("trialtime").textContent = "🎁 Free trial: " + Math.floor(m/60) + "h " + (m%60) + "m left"; }
+function enterTrial(){ enter(); $("trialbar").classList.remove("hide"); tick(); clearInterval(tmr); tmr = setInterval(tick, 30000); }
+window.startTrial = async () => {
+  try {
+    const r = doc(db,"users",auth.currentUser.uid);
+    await updateDoc(r, { trialStarted: serverTimestamp() }); me = (await getDoc(r)).data(); calcTrial();
+    if (trialLeft() > 0) enterTrial(); else toast("Trial is not available right now");
+  } catch(e){ alert("Could not start the trial. Please try again."); }
+};
+window.upgrade = () => { $("trialbox").classList.add("hide"); $("trialend").classList.add("hide"); $("tb").classList.remove("hide"); show("pending"); };
+window.backToApp = () => show("app");
 function enter(){ show("app"); $("hi").textContent = "Hi, " + (me.name || "there") + " 👋"; load(); checkReq(); }
 
 let all = [], q = "", curFile = null, fav = new Set(JSON.parse(localStorage.fav || "[]"));
@@ -313,7 +341,9 @@ vw.addEventListener("scroll", () => {
 });
 
 async function openFile(n){
-  toast("🔒 Your ID is embedded in every page"); curFile = null; localStorage.last = n.id; $("prog").style.width = "0";
+  toast("🔒 Your ID is embedded in every page"); 
+  if (!ADMINS.includes(auth.currentUser.email)) setDoc(doc(db,"fileViews", n.id + "_" + auth.currentUser.uid), { fileId:n.id, fileName:n.name, uid:auth.currentUser.uid, name:me.name||"", email:auth.currentUser.email, count:increment(1), last:serverTimestamp() }, { merge:true }).catch(() => {});
+  curFile = null; localStorage.last = n.id; $("prog").style.width = "0";
   $("viewer").classList.remove("hide"); document.body.style.overflow = "hidden";
   $("vtitle").textContent = n.name; $("pages").innerHTML = "<p style='padding:30px;text-align:center'>Loading…</p>";
   $("wm").innerHTML = Array(120).fill(`<span>${esc(auth.currentUser.email)} • ${dev}</span>`).join("");
