@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Admin – AVCOE Study Material</title>
 <style>
@@ -27,6 +27,17 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid #263056;text-align:left;vertical-align:top}
 .badge{background:#e5484d;border-radius:99px;padding:1px 8px;font-size:12px;margin-left:4px}
 #msg{color:#ffb4b4;font-size:13px;margin-top:6px}
+@media(max-width:640px){
+ .wrap{padding:12px}input{font-size:16px}
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .tabs button{flex:1}
+ .item .x{padding:6px 10px;font-size:14px}
+ #p1 .row button{flex:1 1 45%}
+ table,tbody,tr,td{display:block}tbody tr:first-child{display:none}
+ tr{border:1px solid #263056;border-radius:10px;margin-bottom:10px;padding:6px}
+ td{border:0;padding:4px 6px;word-break:break-word}
+ td .row button{flex:1}
+}
 </style>
 </head>
 <body>
@@ -48,6 +59,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;borde
     <div class="tabs">
       <button id="t1" class="on" onclick="tab(1)">📁 Content</button>
       <button id="t2" onclick="tab(2)">👤 Users <span id="pc" class="badge hide"></span></button>
+      <button id="t3" onclick="tab(3)">📩 Requests <span id="rc" class="badge hide"></span></button>
     </div>
 
     <div id="p1">
@@ -62,6 +74,8 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;borde
       <div class="grid" id="grid"></div>
       <p class="sub" id="empty"></p>
     </div>
+
+    <div id="p3" class="hide"><div id="rl"></div></div>
 
     <div id="p2" class="hide card">
       <div class="row" style="justify-content:space-between"><h2>Users</h2><button class="s" onclick="loadUsers()">🔄 Refresh</button></div>
@@ -94,13 +108,12 @@ onAuthStateChanged(auth, async u => {
   if (!u) { $("login").classList.remove("hide"); $("app").classList.add("hide"); return; }
   if (!ADMINS.includes(u.email)) { await signOut(auth); $("msg").textContent = "❌ This is not an admin account"; return; }
   $("login").classList.add("hide"); $("app").classList.remove("hide");
-  load(); pendingCount();
+  load(); pendingCount(); loadReqs();
 });
 
 window.tab = n => {
-  $("p1").classList.toggle("hide", n!==1); $("p2").classList.toggle("hide", n!==2);
-  $("t1").classList.toggle("on", n===1); $("t2").classList.toggle("on", n===2);
-  if (n===2) loadUsers();
+  [1,2,3].forEach(i => { $("p"+i).classList.toggle("hide", i!==n); $("t"+i).classList.toggle("on", i===n); });
+  if (n===2) loadUsers(); if (n===3) loadReqs();
 };
 
 async function load(){
@@ -148,6 +161,24 @@ async function delNode(n){
   if (!confirm(`"${n.name}" – delete this item?` + (n.type==="folder" ? "\n(Items inside must be deleted separately)" : ""))) return;
   await deleteDoc(doc(db,"nodes",n.id)); load();
 }
+
+window.loadReqs = async () => {
+  const s = await getDocs(collection(db,"requests")), ms = r => r.createdAt?.toMillis?.() || 0;
+  const L = {open:"⏳ Open", done:"✅ Added", rejected:"❌ Rejected"};
+  const l = s.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => (a.status!=="open")-(b.status!=="open") || ms(b)-ms(a));
+  $("rl").innerHTML = l.length ? l.map(r => `<div class="card"><div class="row" style="justify-content:space-between"><b>${esc(r.title)}</b><span>${L[r.status]||L.open}</span></div>
+    <p class="sub" style="margin-top:6px">${esc(r.details||"—")}</p><p class="sub">👤 ${esc(r.name||"")} • ${esc(r.email)}</p>
+    <input id="rp_${r.id}" placeholder="Message / reason for student (optional)" value="${esc(r.reply||"")}">
+    <div class="row" style="margin-top:6px"><button class="g" onclick="setReq('${r.id}','done')">✅ Added</button><button class="r" onclick="setReq('${r.id}','rejected')">❌ Reject</button>
+    <button class="s" onclick="setReq('${r.id}','open')">↺ Reopen</button><button class="s" onclick="delReq('${r.id}')">🗑 Delete</button></div></div>`).join("") : "<p class='sub'>No requests yet.</p>";
+  const o = l.filter(r => (r.status||"open") === "open").length; $("rc").textContent = o; $("rc").classList.toggle("hide", !o);
+};
+window.setReq = async (id,v) => {
+  const reply = $("rp_"+id).value.trim();
+  if (v === "rejected" && !reply) return alert("Please write a reason for rejecting.");
+  await updateDoc(doc(db,"requests",id), { status:v, reply, repliedAt:serverTimestamp() }); loadReqs();
+};
+window.delReq = async id => { if (confirm("Delete this request?")) { await deleteDoc(doc(db,"requests",id)); loadReqs(); } };
 
 async function pendingCount(){
   const s = await getDocs(query(collection(db,"users"), where("approved","==",false)));
