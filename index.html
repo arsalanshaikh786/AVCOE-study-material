@@ -5,48 +5,59 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>AVCOE 1st Year – Study Material</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body{font-family:system-ui,sans-serif;background:#0b1020;color:#e8ecf8;min-height:100vh}
-input{-webkit-user-select:text;user-select:text}
-.wrap{max-width:900px;margin:auto;padding:16px}
-.card{background:#151b33;border:1px solid #263056;border-radius:14px;padding:18px;margin:12px 0}
-h1{font-size:20px}h2{font-size:17px;margin-bottom:8px}
-.sub{color:#8f9bc4;font-size:13px}
-input{width:100%;padding:11px;margin:6px 0;border-radius:9px;border:1px solid #2b3665;background:#0b1020;color:#fff;font-size:15px}
-button{padding:10px 14px;border:0;border-radius:9px;background:#4f7cff;color:#fff;font-weight:600;cursor:pointer;font-size:14px}
-button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{background:#263056}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#151b33;border-bottom:1px solid #263056}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.item{background:#151b33;border:1px solid #263056;border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;word-break:break-word}
-.item:hover{border-color:#4f7cff}.item .i{font-size:34px}.item small{display:block;color:#8f9bc4;margin-top:4px}
-.crumb{color:#8f9bc4;font-size:14px;margin:8px 0}.crumb b{color:#4f7cff;cursor:pointer}
-.code{font:700 22px monospace;letter-spacing:2px;background:#0b1020;padding:12px;border-radius:9px;text-align:center;margin:10px 0;color:#7fe0a0}
-.hide{display:none!important}
-#viewer{position:fixed;inset:0;background:#000;z-index:50;overflow:auto}
-#vbar{position:sticky;top:0;z-index:5;background:#151b33;padding:4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-#vbar button{padding:5px 9px;font-size:13px;border-radius:7px}#vtitle{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#zl{min-width:44px;text-align:center;font-size:13px}
-#pages{width:100%;margin:0 auto}#pages canvas{display:block;margin:10px 0;width:100%;height:auto;pointer-events:none}
-#pages.night canvas{filter:invert(1) hue-rotate(180deg)}
-#wm{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-wrap:wrap;overflow:hidden;opacity:.13;font-size:13px;transform:rotate(-20deg) scale(1.6);color:#fff}
-#wm span{padding:26px 34px}
-#shield{position:fixed;inset:0;background:#000;z-index:99;display:flex;align-items:center;justify-content:center;font-size:18px}
-#msg{color:#ffb4b4;font-size:13px;margin-top:6px}
-#viewer{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
-#vbar{padding-top:max(4px,env(safe-area-inset-top))}
-#vtog{position:fixed;top:max(6px,env(safe-area-inset-top));right:8px;z-index:6;opacity:.55;padding:4px 12px;border-radius:99px;font-size:14px}#vtog:hover,#vtog:active{opacity:1}
+:root{--bg:#070b18;--c:#111936;--c2:#18214a;--b:#27315f;--t:#eaf0ff;--m:#8d9bc8;--p:#6c8cff;--p2:#a56bff}
+[data-t=light]{--bg:#f3f5fc;--c:#fff;--c2:#eef1ff;--b:#dfe4f5;--t:#12183a;--m:#5c6694}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;transition:background .3s}
+body:before,body:after{content:"";position:fixed;width:46vmax;height:46vmax;border-radius:50%;filter:blur(90px);opacity:.28;z-index:-1;animation:fl 18s ease-in-out infinite alternate}
+body:before{background:var(--p);top:-20vmax;left:-14vmax}body:after{background:var(--p2);bottom:-22vmax;right:-14vmax;animation-delay:-9s}
+@keyframes fl{to{transform:translate(8vmax,6vmax) scale(1.15)}}
+input{-webkit-user-select:text;user-select:text;width:100%;padding:13px 15px;margin:6px 0;border-radius:12px;border:1px solid var(--b);background:var(--c2);color:var(--t);font-family:inherit;font-size:15px;outline:0;transition:.2s}
+input:focus{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 25%,transparent)}
+.wrap{max-width:960px;margin:auto;padding:18px}
+.card{background:color-mix(in srgb,var(--c) 82%,transparent);backdrop-filter:blur(14px);border:1px solid var(--b);border-radius:20px;padding:22px;margin:12px 0;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+h1{font-size:27px;font-weight:800;letter-spacing:-.5px}h2{font-size:18px;margin-bottom:8px}.sub{color:var(--m);font-size:13px}.sec{margin:22px 0 10px;font-size:16px}
+button{padding:11px 16px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:.2s}
+button:hover{filter:brightness(1.1)}button:active{transform:scale(.95)}
+button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{background:var(--c2);color:var(--t);border:1px solid var(--b)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.hide{display:none!important}
+.top{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:11px 18px;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(16px);border-bottom:1px solid var(--b)}
+.brand{display:flex;gap:10px;align-items:center}.brand b{display:block;font-weight:800}.brand small{color:var(--m);font-size:12px}
+.logo{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--p),var(--p2));font-size:21px}
+.hero{padding:26px 22px;border-radius:24px;background:linear-gradient(135deg,color-mix(in srgb,var(--p) 38%,var(--c)),color-mix(in srgb,var(--p2) 32%,var(--c)));border:1px solid var(--b);margin:14px 0 6px}
+.chip,.feat span{display:inline-block;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.13);font-size:13px;margin:10px 6px 0 0}
+.feat{margin:14px 0 6px}.feat span{background:var(--c2);border:1px solid var(--b);font-size:12px;margin:4px 4px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
+.item{position:relative;padding:22px 12px 16px;border-radius:18px;text-align:center;cursor:pointer;border:1px solid var(--b);background:linear-gradient(160deg,hsl(var(--h) 75% 55%/.25),var(--c) 72%);transition:.25s;animation:up .4s both;word-break:break-word}
+.item:hover{transform:translateY(-5px);border-color:hsl(var(--h) 75% 60%);box-shadow:0 14px 30px hsl(var(--h) 75% 40%/.3)}
+@keyframes up{from{opacity:0;transform:translateY(12px)}}
+.item .i{font-size:38px;margin-bottom:6px}.nm{font-weight:600;font-size:14px}.item small{display:block;color:var(--m);margin-top:4px;font-size:12px}
+.fv{position:absolute;top:6px;right:6px;background:none!important;padding:2px 6px;font-size:18px;color:var(--m)}.fv.on{color:#ffc53d}
+.nw{position:absolute;top:10px;left:10px;background:#25d366;color:#04210f;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px}
+.sk{height:130px;border-radius:18px;background:linear-gradient(90deg,var(--c),var(--c2),var(--c));background-size:200% 100%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
+.crumb{color:var(--m);font-size:14px;margin:14px 0 10px}.crumb b{color:var(--p);cursor:pointer}
+.code{font:800 24px monospace;letter-spacing:3px;background:var(--c2);padding:14px;border-radius:12px;text-align:center;margin:12px 0;color:#7fe0a0;border:1px dashed var(--b)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);background:var(--t);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:14px;opacity:0;transition:.3s;z-index:200;pointer-events:none}.toast.on{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:14px}.modal .card{width:100%;max-width:480px;max-height:90vh;overflow:auto;margin:0}
+.rqi{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--b);border-radius:12px;margin-top:8px;font-size:14px}.rqi span{font-size:12px;white-space:nowrap}.lnk{color:var(--p);cursor:pointer;text-decoration:underline}
+#msg{color:#ff9a9a;font-size:13px;margin-top:8px}
+#viewer{position:fixed;inset:0;background:#000;z-index:50;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
+#prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:7;background:linear-gradient(90deg,var(--p),var(--p2))}
+#vbar{position:sticky;top:0;z-index:5;background:#151b33;color:#eaf0ff;padding:4px 8px;padding-top:max(4px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#vbar button{padding:5px 9px;font-size:13px;border-radius:7px;color:#eaf0ff}#vtitle{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#zl,#pg{min-width:40px;text-align:center;font-size:13px}
+#vtog{position:fixed;top:max(6px,env(safe-area-inset-top));right:8px;z-index:6;opacity:.55;padding:4px 12px;border-radius:99px;font-size:14px}#vtog:active{opacity:1}
+#pages{width:100%;margin:0 auto}#pages canvas{display:block;margin:10px 0;width:100%;height:auto;pointer-events:none}#pages.night canvas{filter:invert(1) hue-rotate(180deg)}
+#wm{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-wrap:wrap;overflow:hidden;opacity:.13;font-size:13px;transform:rotate(-20deg) scale(1.6);color:#fff}#wm span{padding:26px 34px}
+#shield{position:fixed;inset:0;background:#000;color:#fff;z-index:99;display:flex;align-items:center;justify-content:center;font-size:18px}
 @media(max-width:640px){
- .wrap{padding:12px}input{font-size:16px}
- .grid{grid-template-columns:repeat(2,1fr)}.item{padding:14px 8px}
- #login .row button{flex:1 1 45%}#pending .row button{flex:1 1 100%}
- .code{font-size:20px}
- #vbar{padding-left:8px;padding-right:8px}#vbar .t{display:none}
- #vbar button{padding:7px 10px;font-size:15px;min-width:38px}
- #vtitle{display:none}
- #vbar .row{width:100%;justify-content:space-between;gap:4px;flex-wrap:nowrap}
- #wm{font-size:11px}
+ .wrap{padding:12px}input{font-size:16px}h1{font-size:23px}
+ .grid{grid-template-columns:repeat(2,1fr)}.item{padding:18px 8px 14px}
+ #login .row button{flex:1 1 45%}#pending .row button{flex:1 1 100%}.code{font-size:20px}.hero{padding:20px 16px}
+ #vbar .t,#vtitle{display:none}#vbar button{padding:7px 10px;font-size:15px;min-width:38px}
+ #vbar .row{width:100%;justify-content:space-between;gap:4px;flex-wrap:nowrap}#wm{font-size:11px}
 }
 @media print{body{display:none!important}}
 </style>
@@ -55,8 +66,9 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 
 <div id="login" class="wrap hide">
   <div class="card" style="margin-top:8vh">
-    <h1>🎓 AVCOE 1st Year</h1>
-    <p class="sub">Notes • Previous Year Papers • Question Banks</p><br>
+    <div class="logo" style="width:56px;height:56px;font-size:30px;margin-bottom:12px">🎓</div><h1>AVCOE 1st Year<br>Study Hub</h1>
+    <p class="sub" style="margin-top:6px">Your all-in-one library for exams.</p>
+    <div class="feat"><span>📚 Notes</span><span>📝 Previous Year Papers</span><span>❓ Question Banks</span><span>🔒 Secure Reader</span></div><br>
     <input id="nm" placeholder="Full name (for signup only)">
     <input id="em" type="email" placeholder="Email">
     <input id="pw" type="password" placeholder="Password">
@@ -84,18 +96,38 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 </div>
 
 <div id="app" class="hide">
-  <div class="bar"><b>🎓 AVCOE 1st Year</b><button class="s" onclick="doLogout()">Logout</button></div>
+  <header class="top"><div class="brand"><div class="logo">🎓</div><div><b>AVCOE</b><small>1st Year Study Hub</small></div></div>
+    <div class="row"><button class="s" id="thb" onclick="theme()">🌙</button><button class="s" onclick="doLogout()">⎋ Logout</button></div></header>
   <div class="wrap">
+    <div class="hero" id="hero"><h1 id="hi"></h1><p class="sub" style="color:inherit;opacity:.8;margin-top:4px">What are you studying today?</p>
+      <span class="chip" id="st1"></span><span class="chip" id="st2"></span></div>
+    <input id="q" placeholder="🔍 Search notes, papers, subjects…">
+    <div id="home">
+      <div id="cont" class="hide"></div>
+      <h3 class="sec hide" id="fvh">⭐ Favorites</h3><div class="grid" id="fvg"></div>
+      <h3 class="sec hide" id="rch">🆕 Recently added</h3><div class="grid" id="rcg"></div>
+      <h3 class="sec">📚 All subjects</h3>
+    </div>
     <div class="crumb" id="crumb"></div>
     <div class="grid" id="grid"></div>
-    <p class="sub" id="empty"></p>
+    <p class="sub" id="empty" style="margin-top:14px"></p>
+    <div class="card row" style="justify-content:space-between;margin-top:26px"><div><b>📩 Can't find what you need?</b><div class="sub">Request any notes, paper or question bank — admin will add it.</div></div><button onclick="openReq()">Request Material</button></div>
   </div>
 </div>
+<div class="toast" id="toast"></div>
+<div id="rq" class="modal hide" onclick="if(event.target===this)closeReq()"><div class="card">
+  <h2>📩 Request Study Material</h2><p class="sub">Tell us what is missing. You will see its status below.</p><br>
+  <input id="rqt" placeholder="Subject / Title (e.g. Maths-1 PYQ 2023)">
+  <input id="rqd" placeholder="Details (optional) — unit, year, type…">
+  <div class="row" style="margin-top:8px"><button onclick="sendReq()">Send Request</button><button class="s" onclick="closeReq()">Close</button></div>
+  <h3 class="sec">My requests</h3><div id="rql"></div>
+</div></div>
 
 <div id="viewer" class="hide">
+  <div id="prog"></div>
   <div id="vbar"><b id="vtitle"></b>
     <div class="row">
-      <button class="s" onclick="zoom(-25)">➖</button><span id="zl">100%</span><button class="s" onclick="zoom(25)">➕</button>
+      <button class="s" onclick="zoom(-25)">➖</button><span id="zl">100%</span><button class="s" onclick="zoom(25)">➕</button><span id="pg"></span>
       <button class="s" onclick="fitW()" title="Fit width">↔<span class="t"> Fit</span></button>
       <button class="s" id="nmb" onclick="nightMode()" title="Night mode">🌙<span class="t"> Night</span></button>
       <button class="s" id="wlb" onclick="keepOn()" title="Keep screen on">💡<span class="t"> Screen On: OFF</span></button>
@@ -112,7 +144,7 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyBcXm5QQaYCCddVXNgGqTBAszdKEK-0PJQ", authDomain: "multi-service-app-77dd8.firebaseapp.com", projectId: "multi-service-app-77dd8", storageBucket: "multi-service-app-77dd8.appspot.com", messagingSenderId: "123732555482", appId: "1:123732555482:web:ea47c825e0dbb504f597e3" };
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
@@ -165,25 +197,92 @@ onAuthStateChanged(auth, async u => {
   enter();
 });
 
-function enter(){ show("app"); load(); }
+function enter(){ show("app"); $("hi").textContent = "Hi, " + (me.name || "there") + " 👋"; load(); checkReq(); }
 
-async function load(){
-  const snap = await getDocs(query(collection(db,"nodes"), where("parent","==",cur)));
-  const items = snap.docs.map(d => ({id:d.id, ...d.data()}))
-    .sort((a,b) => (a.type===b.type ? a.name.localeCompare(b.name) : a.type==="folder"?-1:1));
-  $("grid").innerHTML = "";
-  items.forEach(n => {
-    const d = document.createElement("div"); d.className = "item";
-    d.innerHTML = `<div class="i">${n.type==="folder"?"📁":n.kind==="pdf"?"📕":"🖼️"}</div>${esc(n.name)}<small>${n.type==="folder"?"Folder":n.kind.toUpperCase()}</small>`;
-    d.onclick = () => n.type==="folder" ? (trail.push({id:n.id,name:n.name}), cur = n.id, load()) : openFile(n);
-    $("grid").appendChild(d);
-  });
-  $("empty").textContent = items.length ? "" : "Nothing here yet.";
-  $("crumb").innerHTML = trail.map((t,i) => `<b onclick="goTo(${i})">${esc(t.name)}</b>`).join(" › ");
+let all = [], q = "", curFile = null, fav = new Set(JSON.parse(localStorage.fav || "[]"));
+const hue = t => { let h = 0; for (const c of t) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
+const ts = n => n.createdAt?.toMillis?.() || 0;
+const kids = id => all.filter(n => n.parent === id);
+const cnt = id => kids(id).reduce((a,n) => a + (n.type==="file" ? 1 : cnt(n.id)), 0);
+const byId = id => all.find(n => n.id === id);
+const ico = n => n.type==="folder" ? "📁" : n.kind==="pdf" ? "📕" : "🖼️";
+const toast = m => { const t = $("toast"); t.textContent = m; t.classList.add("on"); clearTimeout(window._t); window._t = setTimeout(() => t.classList.remove("on"), 2200); };
+const sorter = (a,b) => a.type===b.type ? a.name.localeCompare(b.name) : a.type==="folder" ? -1 : 1;
+function cardEl(n, i){
+  const d = document.createElement("div"); d.className = "item"; d.style.setProperty("--h", hue(n.name)); d.style.animationDelay = Math.min(i,12)*30 + "ms";
+  const isNew = Date.now() - ts(n) < 7*864e5 && ts(n);
+  d.innerHTML = `<button class="fv ${fav.has(n.id)?"on":""}" onclick="tf(event,'${n.id}')">★</button>${isNew?'<span class="nw">NEW</span>':""}<div class="i">${ico(n)}</div><div class="nm">${esc(n.name)}</div><small>${n.type==="folder" ? cnt(n.id)+" files" : n.kind.toUpperCase()}</small>`;
+  d.onclick = () => n.type==="folder" ? go(n.id) : openFile(n);
+  return d;
 }
-window.goTo = i => { trail = trail.slice(0,i+1); cur = trail[i].id; load(); };
+const fill = (el, list) => { el.innerHTML = ""; list.forEach((n,i) => el.appendChild(cardEl(n,i))); };
+async function load(force){
+  if (force || !all.length) {
+    $("grid").innerHTML = Array(6).fill('<div class="sk"></div>').join("");
+    all = (await getDocs(collection(db,"nodes"))).docs.map(d => ({id:d.id, ...d.data()}));
+  }
+  render();
+}
+function render(){
+  const root = cur === "root" && !q;
+  $("home").classList.toggle("hide", !root); $("hero").classList.toggle("hide", !root);
+  const list = (q ? all.filter(n => n.name.toLowerCase().includes(q)) : kids(cur)).sort(sorter);
+  fill($("grid"), list);
+  $("empty").innerHTML = list.length ? "" : q ? `No results found. <span class="lnk" onclick="openReq(true)">Request this material</span>` : "Nothing here yet.";
+  $("crumb").innerHTML = q ? `Search results for “${esc(q)}”` : trail.map((t,i) => `<b onclick="goTo(${i})">${esc(t.name)}</b>`).join(" › ");
+  $("crumb").classList.toggle("hide", root);
+  if (!root) return;
+  const files = all.filter(n => n.type==="file");
+  $("st1").textContent = "📁 " + all.filter(n => n.type==="folder").length + " folders"; $("st2").textContent = "📄 " + files.length + " files";
+  const fl = all.filter(n => fav.has(n.id)); fill($("fvg"), fl); $("fvh").classList.toggle("hide", !fl.length);
+  const rc = [...files].sort((a,b) => ts(b)-ts(a)).slice(0,4); fill($("rcg"), rc); $("rch").classList.toggle("hide", !rc.length);
+  const last = byId(localStorage.last);
+  $("cont").classList.toggle("hide", !last);
+  if (last) { $("cont").innerHTML = `<div class="card row" style="justify-content:space-between"><div><b>▶ Continue reading</b><div class="sub">${esc(last.name)}</div></div><button id="cb">Resume</button></div>`; $("cb").onclick = () => openFile(last); }
+}
+function go(id){
+  const t = []; let n = byId(id); while (n) { t.unshift({id:n.id, name:n.name}); n = byId(n.parent); }
+  trail = [{id:"root", name:"Home"}, ...t]; cur = id; q = ""; $("q").value = ""; render(); window.scrollTo(0,0);
+}
+window.goTo = i => { trail = trail.slice(0,i+1); cur = trail[i].id; render(); };
+window.openReq = pre => { $("rq").classList.remove("hide"); $("rqt").value = pre ? q : ""; myReqs(); };
+window.closeReq = () => $("rq").classList.add("hide");
+window.sendReq = async () => {
+  const t = $("rqt").value.trim(); if (!t) return toast("Enter what you need");
+  try {
+    await addDoc(collection(db,"requests"), { uid:auth.currentUser.uid, name:me.name||"", email:auth.currentUser.email, title:t, details:$("rqd").value.trim(), status:"open", createdAt:serverTimestamp() });
+    $("rqt").value = ""; $("rqd").value = ""; toast("Request sent ✅"); myReqs();
+  } catch(e){ toast("Could not send request"); }
+};
+const getMy = async () => (await getDocs(query(collection(db,"requests"), where("uid","==",auth.currentUser.uid)))).docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => ts(b)-ts(a));
+async function myReqs(){
+  try {
+    const l = await getMy(), L = {open:"⏳ Pending", done:"✅ Added", rejected:"❌ Not available"};
+    $("rql").innerHTML = l.length ? l.map(r => `<div class="rqi"><div><b>${esc(r.title)}</b>${r.reply ? `<div class="sub" style="margin-top:4px">💬 Admin: ${esc(r.reply)}</div>` : ""}</div><span>${L[r.status]||L.open}</span></div>`).join("") : '<p class="sub">No requests yet.</p>';
+    localStorage.rqs = JSON.stringify(l.filter(r => r.status !== "open").map(r => r.id + r.status));
+  } catch(e){ $("rql").innerHTML = '<p class="sub">Could not load requests.</p>'; }
+}
+async function checkReq(){
+  try {
+    if (ADMINS.includes(auth.currentUser.email)) return;
+    const seen = JSON.parse(localStorage.rqs || "[]");
+    if ((await getMy()).some(r => r.status && r.status !== "open" && !seen.includes(r.id + r.status))) toast("📩 Admin replied to your request");
+  } catch(e){}
+}
+window.tf = (e,id) => { e.stopPropagation(); fav.has(id) ? fav.delete(id) : fav.add(id); localStorage.fav = JSON.stringify([...fav]); toast(fav.has(id) ? "Added to favorites ⭐" : "Removed from favorites"); render(); };
+window.theme = () => { const l = document.documentElement.dataset.t === "light"; document.documentElement.dataset.t = l ? "" : "light"; localStorage.th = l ? "" : "light"; $("thb").textContent = l ? "🌙" : "☀️"; };
+document.documentElement.dataset.t = localStorage.th || ""; $("thb").textContent = localStorage.th ? "☀️" : "🌙";
+$("q").addEventListener("input", e => { q = e.target.value.toLowerCase().trim(); render(); });
+const vw = $("viewer");
+vw.addEventListener("scroll", () => {
+  const m = vw.scrollHeight - vw.clientHeight; if (m <= 0) return;
+  const r = vw.scrollTop / m; $("prog").style.width = r*100 + "%";
+  const c = $("pages").children.length; $("pg").textContent = c > 1 ? Math.min(c, Math.round(r*(c-1))+1) + "/" + c : "";
+  if (curFile) localStorage["p_" + curFile] = r.toFixed(4);
+});
 
 async function openFile(n){
+  curFile = null; localStorage.last = n.id; $("prog").style.width = "0";
   $("viewer").classList.remove("hide"); document.body.style.overflow = "hidden";
   $("vtitle").textContent = n.name; $("pages").innerHTML = "<p style='padding:30px;text-align:center'>Loading…</p>";
   $("wm").innerHTML = Array(120).fill(`<span>${esc(auth.currentUser.email)} • ${dev}</span>`).join("");
@@ -219,7 +318,9 @@ async function openFile(n){
         if (!got) throw new Error("PDF blocked by Cloudinary (enable PDF delivery in Security settings)");
       }
     }
-  } catch(e){ $("pages").innerHTML = `<p style='padding:30px;text-align:center'>Could not load the file.<br><small>${esc(e.message||"Access or network error")}</small></p>`; }
+    const sv = +localStorage["p_" + n.id]; if (sv > 0.01) { vw.scrollTop = sv * (vw.scrollHeight - vw.clientHeight); toast("Resumed where you left off"); }
+    curFile = n.id;
+  } catch(e){ $("pages").innerHTML = `<p style='padding:30px;text-align:center;color:#fff'>Could not load the file.<br><small>${esc(e.message||"Access or network error")}</small></p>`; }
 }
 window.hideBar = () => { $("vbar").classList.add("hide"); $("vtog").classList.remove("hide"); };
 window.showBar = () => { $("vbar").classList.remove("hide"); $("vtog").classList.add("hide"); };
@@ -245,7 +346,7 @@ window.fs = () => {
   if (f) f.call(v); else alert("Fullscreen is not supported in this browser");
 };
 window.closeViewer = () => {
-  showBar();
+  showBar(); curFile = null; $("pg").textContent = ""; render();
   wantWake = false; if (wl) { wl.release(); wl = null; } wlUi();
   if (document.fullscreenElement) document.exitFullscreen();
   zm = 100; applyZ(); $("pages").classList.remove("night"); $("nmb").innerHTML = '🌙<span class="t"> Night</span>'; $("viewer").classList.add("hide"); $("pages").innerHTML = ""; document.body.style.overflow = ""; };
