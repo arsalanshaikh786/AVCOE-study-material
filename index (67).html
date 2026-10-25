@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AVCOE 1st Year – Study Material</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{font-family:system-ui,sans-serif;background:#0b1020;color:#e8ecf8;min-height:100vh}
+input{-webkit-user-select:text;user-select:text}
+.wrap{max-width:900px;margin:auto;padding:16px}
+.card{background:#151b33;border:1px solid #263056;border-radius:14px;padding:18px;margin:12px 0}
+h1{font-size:20px}h2{font-size:17px;margin-bottom:8px}
+.sub{color:#8f9bc4;font-size:13px}
+input{width:100%;padding:11px;margin:6px 0;border-radius:9px;border:1px solid #2b3665;background:#0b1020;color:#fff;font-size:15px}
+button{padding:10px 14px;border:0;border-radius:9px;background:#4f7cff;color:#fff;font-weight:600;cursor:pointer;font-size:14px}
+button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{background:#263056}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#151b33;border-bottom:1px solid #263056}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.item{background:#151b33;border:1px solid #263056;border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;word-break:break-word}
+.item:hover{border-color:#4f7cff}.item .i{font-size:34px}.item small{display:block;color:#8f9bc4;margin-top:4px}
+.crumb{color:#8f9bc4;font-size:14px;margin:8px 0}.crumb b{color:#4f7cff;cursor:pointer}
+.code{font:700 22px monospace;letter-spacing:2px;background:#0b1020;padding:12px;border-radius:9px;text-align:center;margin:10px 0;color:#7fe0a0}
+.hide{display:none!important}
+#viewer{position:fixed;inset:0;background:#000;z-index:50;overflow:auto}
+#vbar{position:sticky;top:0;z-index:5;background:#151b33;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#vbar button{padding:8px 11px;font-size:13px}#vtitle{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#zl{min-width:44px;text-align:center;font-size:13px}
+#pages{width:100%;margin:0 auto}#pages canvas{display:block;margin:10px 0;width:100%;height:auto;pointer-events:none}
+#pages.night canvas{filter:invert(1) hue-rotate(180deg)}
+#wm{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-wrap:wrap;overflow:hidden;opacity:.13;font-size:13px;transform:rotate(-20deg) scale(1.6);color:#fff}
+#wm span{padding:26px 34px}
+#shield{position:fixed;inset:0;background:#000;z-index:99;display:flex;align-items:center;justify-content:center;font-size:18px}
+#msg{color:#ffb4b4;font-size:13px;margin-top:6px}
+#viewer{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
+#vbar{padding-top:max(8px,env(safe-area-inset-top))}
+@media(max-width:640px){
+ .wrap{padding:12px}input{font-size:16px}
+ .grid{grid-template-columns:repeat(2,1fr)}.item{padding:14px 8px}
+ #login .row button{flex:1 1 45%}#pending .row button{flex:1 1 100%}
+ .code{font-size:20px}
+ #vbar{padding-left:8px;padding-right:8px}#vbar .t{display:none}
+ #vbar button{padding:11px 12px;font-size:16px;min-width:42px}
+ #vtitle{max-width:100%;width:100%;font-size:13px}
+ #vbar .row{width:100%;justify-content:space-between;gap:4px;flex-wrap:nowrap}
+ #wm{font-size:11px}
+}
+@media print{body{display:none!important}}
+</style>
+</head>
+<body oncontextmenu="return false" ondragstart="return false">
+
+<div id="login" class="wrap hide">
+  <div class="card" style="margin-top:8vh">
+    <h1>🎓 AVCOE 1st Year</h1>
+    <p class="sub">Notes • Previous Year Papers • Question Banks</p><br>
+    <input id="nm" placeholder="Full name (for signup only)">
+    <input id="em" type="email" placeholder="Email">
+    <input id="pw" type="password" placeholder="Password">
+    <div class="row" style="margin-top:8px">
+      <button onclick="doLogin()">Login</button>
+      <button class="s" onclick="doSignup()">Signup</button>
+      <button class="s" onclick="doReset()">Forgot password?</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<div id="pending" class="wrap hide">
+  <div class="card" style="margin-top:8vh">
+    <h2 id="ptitle">⏳ Approval pending</h2>
+    <p class="sub" id="ptext">Send your Device Code to the admin to get access. Refresh after you are approved.</p>
+    <div class="code" id="devcode"></div>
+    <div class="row">
+      <button class="g" onclick="sendWA()">📲 Request Access on WhatsApp</button>
+      <button class="s" onclick="location.reload()">Refresh</button>
+      <button class="s" onclick="doLogout()">Logout</button>
+    </div>
+    <p class="sub" style="margin-top:14px">Admin contact: <b>9049547764</b> (WhatsApp)</p>
+  </div>
+</div>
+
+<div id="app" class="hide">
+  <div class="bar"><b>🎓 AVCOE 1st Year</b><button class="s" onclick="doLogout()">Logout</button></div>
+  <div class="wrap">
+    <div class="crumb" id="crumb"></div>
+    <div class="grid" id="grid"></div>
+    <p class="sub" id="empty"></p>
+  </div>
+</div>
+
+<div id="viewer" class="hide">
+  <div id="vbar"><b id="vtitle"></b>
+    <div class="row">
+      <button class="s" onclick="zoom(-25)">➖</button><span id="zl">100%</span><button class="s" onclick="zoom(25)">➕</button>
+      <button class="s" onclick="fitW()" title="Fit width">↔<span class="t"> Fit</span></button>
+      <button class="s" id="nmb" onclick="nightMode()" title="Night mode">🌙<span class="t"> Night</span></button>
+      <button class="s" id="wlb" onclick="keepOn()" title="Keep screen on">💡<span class="t"> Screen On: OFF</span></button>
+      <button class="s" onclick="fs()" title="Fullscreen">⛶<span class="t"> Fullscreen</span></button>
+      <button class="r" onclick="closeViewer()" title="Close">✕<span class="t"> Close</span></button>
+    </div></div>
+  <div id="wm"></div>
+  <div id="pages"></div>
+</div>
+<div id="shield" class="hide">🔒 Content secured — come back to the tab</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyBcXm5QQaYCCddVXNgGqTBAszdKEK-0PJQ", authDomain: "multi-service-app-77dd8.firebaseapp.com", projectId: "multi-service-app-77dd8", storageBucket: "multi-service-app-77dd8.appspot.com", messagingSenderId: "123732555482", appId: "1:123732555482:web:ea47c825e0dbb504f597e3" };
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
+
+// ⚠️ admin.html mein bhi yahi email rakhna
+const ADMINS = ["admin@gmail.com"];
+const ADMIN_WA = "919049547764";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const $ = id => document.getElementById(id);
+const show = id => ["login","pending","app"].forEach(x => $(x).classList.toggle("hide", x !== id));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let dev = localStorage.getItem("_dc");
+if (!dev) { dev = "AV-" + crypto.randomUUID().replace(/-/g,"").slice(0,8).toUpperCase(); localStorage.setItem("_dc", dev); }
+$("devcode").textContent = dev;
+
+let me = null, cur = "root", trail = [{id:"root",name:"Home"}];
+const err = m => $("msg").textContent = m;
+
+window.doSignup = async () => {
+  try {
+    const n = $("nm").value.trim(); if (!n) return err("Please enter your name");
+    const c = await createUserWithEmailAndPassword(auth, $("em").value, $("pw").value);
+    await setDoc(doc(db,"users",c.user.uid), { name:n, email:c.user.email, deviceId:dev, approved:false, createdAt:serverTimestamp() });
+  } catch(e){ err(e.message); }
+};
+window.doLogin = async () => { try { await signInWithEmailAndPassword(auth, $("em").value, $("pw").value); } catch(e){ err("Wrong email or password"); } };
+window.doReset = async () => { try { await sendPasswordResetEmail(auth, $("em").value); err("Password reset email sent"); } catch(e){ err("Enter your email first"); } };
+window.doLogout = () => signOut(auth).then(()=>location.reload());
+window.sendWA = () => {
+  const t = `Hello Admin, I need access to the AVCOE Study Material.\nName: ${me?.name||""}\nEmail: ${auth.currentUser.email}\nDevice Code: ${dev}`;
+  window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(t)}`, "_blank");
+};
+
+onAuthStateChanged(auth, async u => {
+  if (!u) return show("login");
+  if (ADMINS.includes(u.email)) { me = {name:"Admin"}; return enter(); }
+  const r = doc(db,"users",u.uid);
+  let s = await getDoc(r);
+  if (!s.exists()) { await setDoc(r, { name:u.email.split("@")[0], email:u.email, deviceId:dev, approved:false, createdAt:serverTimestamp() }); s = await getDoc(r); }
+  me = s.data();
+  if (me.deviceId !== dev) {
+    $("ptitle").textContent = "📵 New device detected";
+    $("ptext").textContent = "Your account is linked to another device. Send this code to the admin to approve this device.";
+    if (me.pendingDevice !== dev) await updateDoc(r, { pendingDevice: dev });
+    return show("pending");
+  }
+  if (!me.approved) return show("pending");
+  enter();
+});
+
+function enter(){ show("app"); load(); }
+
+async function load(){
+  const snap = await getDocs(query(collection(db,"nodes"), where("parent","==",cur)));
+  const items = snap.docs.map(d => ({id:d.id, ...d.data()}))
+    .sort((a,b) => (a.type===b.type ? a.name.localeCompare(b.name) : a.type==="folder"?-1:1));
+  $("grid").innerHTML = "";
+  items.forEach(n => {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="i">${n.type==="folder"?"📁":n.kind==="pdf"?"📕":"🖼️"}</div>${esc(n.name)}<small>${n.type==="folder"?"Folder":n.kind.toUpperCase()}</small>`;
+    d.onclick = () => n.type==="folder" ? (trail.push({id:n.id,name:n.name}), cur = n.id, load()) : openFile(n);
+    $("grid").appendChild(d);
+  });
+  $("empty").textContent = items.length ? "" : "Nothing here yet.";
+  $("crumb").innerHTML = trail.map((t,i) => `<b onclick="goTo(${i})">${esc(t.name)}</b>`).join(" › ");
+}
+window.goTo = i => { trail = trail.slice(0,i+1); cur = trail[i].id; load(); };
+
+async function openFile(n){
+  $("viewer").classList.remove("hide"); document.body.style.overflow = "hidden";
+  $("vtitle").textContent = n.name; $("pages").innerHTML = "<p style='padding:30px;text-align:center'>Loading…</p>";
+  $("wm").innerHTML = Array(120).fill(`<span>${esc(auth.currentUser.email)} • ${dev}</span>`).join("");
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const addImg = async blob => {
+    const bmp = await createImageBitmap(blob);
+    const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height;
+    c.getContext("2d").drawImage(bmp,0,0); $("pages").appendChild(c);
+  };
+  try {
+    if (n.kind !== "pdf") {
+      const r = await fetch(n.url); if (!r.ok) throw new Error("HTTP " + r.status);
+      $("pages").innerHTML = ""; await addImg(await r.blob());
+    } else {
+      let direct = true, buf;
+      try { const r = await fetch(n.url); if (!r.ok) throw 0; buf = await r.arrayBuffer(); } catch(e){ direct = false; }
+      $("pages").innerHTML = "";
+      if (direct) {
+        const pdf = await pdfjsLib.getDocument({ data:new Uint8Array(buf) }).promise;
+        for (let i=1;i<=pdf.numPages;i++){
+          const p = await pdf.getPage(i), vp = p.getViewport({ scale:1.4*dpr });
+          const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+          $("pages").appendChild(c); await p.render({ canvasContext:c.getContext("2d"), viewport:vp }).promise;
+        }
+      } else {
+        // Fallback: Cloudinary renders PDF pages as JPG images
+        let got = 0;
+        for (let i=1;i<=300;i++){
+          const u = n.url.replace("/upload/", `/upload/pg_${i},f_jpg,q_auto/`).replace(/\.pdf(\?.*)?$/i, ".jpg");
+          const r = await fetch(u); if (!r.ok) break;
+          await addImg(await r.blob()); got++;
+        }
+        if (!got) throw new Error("PDF blocked by Cloudinary (enable PDF delivery in Security settings)");
+      }
+    }
+  } catch(e){ $("pages").innerHTML = `<p style='padding:30px;text-align:center'>Could not load the file.<br><small>${esc(e.message||"Access or network error")}</small></p>`; }
+}
+let zm = 100, wl = null, wantWake = false;
+const applyZ = () => { $("pages").style.width = zm + "%"; $("zl").textContent = zm + "%"; };
+window.zoom = d => { zm = Math.max(50, Math.min(300, zm + d)); applyZ(); };
+window.fitW = () => { zm = 100; applyZ(); };
+window.nightMode = () => { const on = $("pages").classList.toggle("night"); $("nmb").innerHTML = on ? '☀️<span class="t"> Day</span>' : '🌙<span class="t"> Night</span>'; };
+const wlUi = () => { $("wlb").innerHTML = '💡<span class="t"> Screen On: ' + (wantWake ? "ON" : "OFF") + "</span>"; $("wlb").classList.toggle("g", wantWake); $("wlb").classList.toggle("s", !wantWake); };
+const getWake = async () => { try { wl = await navigator.wakeLock.request("screen"); } catch(e){ wl = null; } };
+window.keepOn = async () => {
+  if (!("wakeLock" in navigator)) return alert("Keep-screen-on is not supported in this browser");
+  wantWake = !wantWake;
+  if (wantWake) await getWake(); else if (wl) { await wl.release(); wl = null; }
+  wlUi();
+};
+document.addEventListener("visibilitychange", () => { if (!document.hidden && wantWake) getWake(); });
+window.fs = () => {
+  const v = $("viewer");
+  if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  const f = v.requestFullscreen || v.webkitRequestFullscreen;
+  if (f) f.call(v); else alert("Fullscreen is not supported in this browser");
+};
+window.closeViewer = () => {
+  wantWake = false; if (wl) { wl.release(); wl = null; } wlUi();
+  if (document.fullscreenElement) document.exitFullscreen();
+  zm = 100; applyZ(); $("pages").classList.remove("night"); $("nmb").innerHTML = '🌙<span class="t"> Night</span>'; $("viewer").classList.add("hide"); $("pages").innerHTML = ""; document.body.style.overflow = ""; };
+
+document.addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if (e.key==="F12" || e.key==="PrintScreen" || (e.ctrlKey||e.metaKey) && ["s","p","u","c","a","i","j"].includes(k) || e.ctrlKey&&e.shiftKey&&["i","j","c"].includes(k)) {
+    e.preventDefault(); if (e.key==="PrintScreen") navigator.clipboard?.writeText("Screenshots are not allowed");
+  }
+});
+const sh = on => { if (!$("viewer").classList.contains("hide")) $("shield").classList.toggle("hide", !on); };
+document.addEventListener("visibilitychange", () => sh(document.hidden));
+window.addEventListener("blur", () => sh(true));
+window.addEventListener("focus", () => sh(false));
+document.addEventListener("copy", e => e.preventDefault());
+</script>
+</body>
+</html>

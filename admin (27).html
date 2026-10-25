@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin – AVCOE Study Material</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0b1020;color:#e8ecf8;min-height:100vh}
+.wrap{max-width:1000px;margin:auto;padding:16px}
+.card{background:#151b33;border:1px solid #263056;border-radius:14px;padding:18px;margin:12px 0}
+h1{font-size:20px}h2{font-size:17px;margin-bottom:8px}
+.sub{color:#8f9bc4;font-size:13px}
+input{width:100%;padding:11px;margin:6px 0;border-radius:9px;border:1px solid #2b3665;background:#0b1020;color:#fff;font-size:15px}
+button{padding:10px 14px;border:0;border-radius:9px;background:#4f7cff;color:#fff;font-weight:600;cursor:pointer;font-size:14px}
+button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{background:#263056}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#151b33;border-bottom:1px solid #263056}
+.tabs{display:flex;gap:8px;margin:12px 0}.tabs button{background:#263056}.tabs button.on{background:#4f7cff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.item{background:#151b33;border:1px solid #263056;border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;word-break:break-word;position:relative}
+.item:hover{border-color:#4f7cff}.item .i{font-size:34px}.item small{display:block;color:#8f9bc4;margin-top:4px}
+.item .x{position:absolute;top:4px;right:4px;padding:2px 7px;font-size:12px}
+.crumb{color:#8f9bc4;font-size:14px;margin:8px 0}.crumb b{color:#4f7cff;cursor:pointer}
+.hide{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid #263056;text-align:left;vertical-align:top}
+.badge{background:#e5484d;border-radius:99px;padding:1px 8px;font-size:12px;margin-left:4px}
+#msg{color:#ffb4b4;font-size:13px;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="login" class="wrap hide">
+  <div class="card" style="margin-top:8vh">
+    <h1>🔐 Admin Login</h1>
+    <p class="sub">Authorized admin only</p><br>
+    <input id="em" type="email" placeholder="Admin Email" value="admin@gmail.com">
+    <input id="pw" type="password" placeholder="Password">
+    <button onclick="doLogin()" style="margin-top:8px">Login</button>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<div id="app" class="hide">
+  <div class="bar"><b>⚙️ Admin Panel – AVCOE</b><button class="s" onclick="doLogout()">Logout</button></div>
+  <div class="wrap">
+    <div class="tabs">
+      <button id="t1" class="on" onclick="tab(1)">📁 Content</button>
+      <button id="t2" onclick="tab(2)">👤 Users <span id="pc" class="badge hide"></span></button>
+    </div>
+
+    <div id="p1">
+      <div class="crumb" id="crumb"></div>
+      <div class="row" style="margin-bottom:10px">
+        <button onclick="newFolder()">📁 New Folder</button>
+        <button onclick="document.getElementById('up').click()">⬆️ Upload PDF/Photo</button>
+        <button class="s" onclick="addLink()">🔗 Add Link</button>
+        <input type="file" id="up" multiple accept="application/pdf,image/*" class="hide" onchange="upload(this.files)">
+        <span class="sub" id="upst"></span>
+      </div>
+      <div class="grid" id="grid"></div>
+      <p class="sub" id="empty"></p>
+    </div>
+
+    <div id="p2" class="hide card">
+      <div class="row" style="justify-content:space-between"><h2>Users</h2><button class="s" onclick="loadUsers()">🔄 Refresh</button></div>
+      <input id="srch" placeholder="Search name / email" oninput="loadUsers()">
+      <div style="overflow:auto"><table id="utable"></table></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, updateDoc, deleteDoc, serverTimestamp, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyBcXm5QQaYCCddVXNgGqTBAszdKEK-0PJQ", authDomain: "multi-service-app-77dd8.firebaseapp.com", projectId: "multi-service-app-77dd8", storageBucket: "multi-service-app-77dd8.appspot.com", messagingSenderId: "123732555482", appId: "1:123732555482:web:ea47c825e0dbb504f597e3" };
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
+
+// ⚠️ index.html mein bhi yahi email rakhna
+const ADMINS = ["admin@gmail.com"];
+const CLOUD = "dbirgrdbp", PRESET = "ml_default";   // Cloudinary
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let cur = "root", trail = [{id:"root",name:"Home"}];
+
+window.doLogin = async () => { try { await signInWithEmailAndPassword(auth, $("em").value, $("pw").value); } catch(e){ $("msg").textContent = "Wrong email or password"; } };
+window.doLogout = () => signOut(auth).then(()=>location.reload());
+
+onAuthStateChanged(auth, async u => {
+  if (!u) { $("login").classList.remove("hide"); $("app").classList.add("hide"); return; }
+  if (!ADMINS.includes(u.email)) { await signOut(auth); $("msg").textContent = "❌ This is not an admin account"; return; }
+  $("login").classList.add("hide"); $("app").classList.remove("hide");
+  load(); pendingCount();
+});
+
+window.tab = n => {
+  $("p1").classList.toggle("hide", n!==1); $("p2").classList.toggle("hide", n!==2);
+  $("t1").classList.toggle("on", n===1); $("t2").classList.toggle("on", n===2);
+  if (n===2) loadUsers();
+};
+
+async function load(){
+  const snap = await getDocs(query(collection(db,"nodes"), where("parent","==",cur)));
+  const items = snap.docs.map(d => ({id:d.id, ...d.data()}))
+    .sort((a,b) => (a.type===b.type ? a.name.localeCompare(b.name) : a.type==="folder"?-1:1));
+  $("grid").innerHTML = "";
+  items.forEach(n => {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="i">${n.type==="folder"?"📁":n.kind==="pdf"?"📕":"🖼️"}</div>${esc(n.name)}<small>${n.type==="folder"?"Folder":n.kind.toUpperCase()}</small>`;
+    if (n.type==="folder") d.onclick = () => { trail.push({id:n.id,name:n.name}); cur = n.id; load(); };
+    const x = document.createElement("button"); x.className = "x r"; x.textContent = "✕";
+    x.onclick = e => { e.stopPropagation(); delNode(n); }; d.appendChild(x);
+    $("grid").appendChild(d);
+  });
+  $("empty").textContent = items.length ? "" : "This folder is empty. Add a folder, file or link above.";
+  $("crumb").innerHTML = trail.map((t,i) => `<b onclick="goTo(${i})">${esc(t.name)}</b>`).join(" › ");
+}
+window.goTo = i => { trail = trail.slice(0,i+1); cur = trail[i].id; load(); };
+
+window.newFolder = async () => {
+  const name = prompt("Folder name (e.g. Maths-1, Notes, PYQ, Question Bank):"); if (!name) return;
+  await addDoc(collection(db,"nodes"), { name:name.trim(), type:"folder", parent:cur, createdAt:serverTimestamp() }); load();
+};
+window.upload = async files => {
+  for (const f of files) {
+    try {
+      $("upst").textContent = "Uploading: " + f.name;
+      const fd = new FormData(); fd.append("file", f); fd.append("upload_preset", PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/auto/upload`, { method:"POST", body:fd });
+      const data = await res.json();
+      if (!data.secure_url) throw new Error(data.error?.message || "Upload failed");
+      await addDoc(collection(db,"nodes"), { name:f.name.replace(/\.[^.]+$/,""), type:"file", kind:f.type==="application/pdf"?"pdf":"img", url:data.secure_url, parent:cur, createdAt:serverTimestamp() });
+    } catch(e){ alert("Failed: " + f.name + "\n" + e.message); }
+  }
+  $("upst").textContent = "✅ Upload complete"; $("up").value = ""; load();
+};
+window.addLink = async () => {
+  const url = prompt("Paste the direct file link (PDF or image):"); if (!url) return;
+  const name = prompt("Display name:"); if (!name) return;
+  const kind = /\.pdf($|\?)/i.test(url) ? "pdf" : "img";
+  await addDoc(collection(db,"nodes"), { name:name.trim(), type:"file", kind, url:url.trim(), parent:cur, createdAt:serverTimestamp() }); load();
+};
+async function delNode(n){
+  if (!confirm(`"${n.name}" – delete this item?` + (n.type==="folder" ? "\n(Items inside must be deleted separately)" : ""))) return;
+  await deleteDoc(doc(db,"nodes",n.id)); load();
+}
+
+async function pendingCount(){
+  const s = await getDocs(query(collection(db,"users"), where("approved","==",false)));
+  $("pc").textContent = s.size; $("pc").classList.toggle("hide", !s.size);
+}
+window.loadUsers = async () => {
+  const q = $("srch").value.toLowerCase();
+  const snap = await getDocs(collection(db,"users"));
+  let h = "<tr><th>Name</th><th>Email</th><th>Device</th><th>Status</th><th>Action</th></tr>";
+  snap.docs.map(d => ({id:d.id, ...d.data()}))
+    .filter(u => (u.name+u.email).toLowerCase().includes(q))
+    .sort((a,b) => a.approved - b.approved)
+    .forEach(u => {
+      const np = u.pendingDevice && u.pendingDevice !== u.deviceId;
+      h += `<tr><td>${esc(u.name||"")}</td><td>${esc(u.email)}</td>
+      <td>${esc(u.deviceId)}${np?`<br><small style="color:#ffb86b">New: ${esc(u.pendingDevice)}</small>`:""}</td>
+      <td>${u.approved?"✅ Approved":"⏳ Pending"}</td>
+      <td><div class="row"><button class="${u.approved?"r":""}" onclick="setAp('${u.id}',${!u.approved})">${u.approved?"Block":"Approve"}</button>
+      ${np?`<button class="g" onclick="setDev('${u.id}','${esc(u.pendingDevice)}')">Approve New Device</button>`:""}</div></td></tr>`;
+    });
+  $("utable").innerHTML = h; pendingCount();
+};
+window.setAp = async (id,v) => { await updateDoc(doc(db,"users",id), { approved:v }); loadUsers(); };
+window.setDev = async (id,d) => { await updateDoc(doc(db,"users",id), { deviceId:d, approved:true }); loadUsers(); };
+</script>
+</body>
+</html>
