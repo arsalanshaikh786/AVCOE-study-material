@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>AVCOE 1st Year – Study Material</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#070b18;--c:#111936;--c2:#18214a;--b:#27315f;--t:#eaf0ff;--m:#8d9bc8;--p:#6c8cff;--p2:#a56bff}
@@ -69,7 +70,7 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
   <div class="card" style="margin-top:8vh">
     <div class="logo" style="width:56px;height:56px;font-size:30px;margin-bottom:12px">🎓</div><h1>AVCOE 1st Year<br>Study Hub</h1>
     <p class="sub" style="margin-top:6px">Your all-in-one library for exams.</p>
-    <div class="feat"><span>📚 Notes</span><span>📝 Previous Year Papers</span><span>❓ Question Banks</span><span>🔒 Secure Reader</span></div><br>
+    <div class="feat"><span>📚 Notes</span><span>📝 Previous Year Papers</span><span>❓ Question Banks</span><span>🔒 Secure Reader</span><span>💰 ₹15 Lifetime Access</span></div><br>
     <input id="nm" placeholder="Full name (for signup only)">
     <input id="em" type="email" placeholder="Email">
     <input id="pw" type="password" placeholder="Password">
@@ -86,9 +87,19 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
   <div class="card" style="margin-top:8vh">
     <h2 id="ptitle">⏳ Approval pending</h2>
     <p class="sub" id="ptext">Send your Device Code to the admin to get access. Refresh after you are approved.</p>
+    <div id="paybox" class="hide">
+      <div class="card" style="background:var(--c2);text-align:center;margin:14px 0">
+        <b style="font-size:19px">💳 Pay ₹15 — Lifetime Access</b>
+        <p class="sub" style="margin-top:4px">One-time payment • Lifetime support • All notes, PYQs &amp; question banks</p>
+        <div id="qr" style="background:#fff;padding:12px;border-radius:14px;display:inline-block;margin:14px 0"></div>
+        <div class="sub" id="upiid"></div>
+        <div class="row" style="justify-content:center;margin-top:8px"><button id="upib" class="g">Pay with UPI App</button></div>
+      </div>
+      <p class="sub"><b>How it works:</b> ① Scan the QR &amp; pay ₹15 → ② Take a screenshot of the payment → ③ Tap the WhatsApp button below and attach the screenshot → ④ Admin approves your device.</p>
+    </div>
     <div class="code" id="devcode"></div>
     <div class="row">
-      <button class="g" onclick="sendWA()">📲 Request Access on WhatsApp</button>
+      <button class="g" id="wab" onclick="sendWA()">📲 Request Access on WhatsApp</button>
       <button class="s" onclick="location.reload()">Refresh</button>
       <button class="s" onclick="doLogout()">Logout</button>
     </div>
@@ -153,6 +164,8 @@ const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestor
 // ⚠️ admin.html mein bhi yahi email rakhna
 const ADMINS = ["admin@gmail.com"];
 const ADMIN_WA = "919049547764";
+// 💳 PAYMENT: apna UPI ID yahan daalo (QR apne aap ban jayega). Khali rakho to qr.png image dikhegi.
+const UPI_ID = "9049547764@axl", UPI_NAME = "AVCOE Study Hub", AMOUNT = 15;
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 const $ = id => document.getElementById(id);
@@ -162,6 +175,16 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 let dev = localStorage.getItem("_dc");
 if (!dev) { dev = "AV-" + crypto.randomUUID().replace(/-/g,"").slice(0,8).toUpperCase(); localStorage.setItem("_dc", dev); }
 $("devcode").textContent = dev;
+(function(){
+  const box = $("qr");
+  if (UPI_ID && window.QRCode) {
+    const u = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent("AVCOE Access " + dev)}`;
+    new QRCode(box, { text:u, width:200, height:200 }); $("upiid").textContent = "UPI ID: " + UPI_ID; $("upib").onclick = () => location.href = u;
+  } else {
+    box.innerHTML = '<img src="qr.png" width="220" style="display:block" onerror="this.outerHTML=\'<p style=color:#000;padding:20px>Admin: set UPI_ID in code or add qr.png</p>\'">';
+    $("upib").classList.add("hide");
+  }
+})();
 
 let me = null, cur = "root", trail = [{id:"root",name:"Home"}];
 const err = m => $("msg").textContent = m;
@@ -177,7 +200,7 @@ window.doLogin = async () => { try { await signInWithEmailAndPassword(auth, $("e
 window.doReset = async () => { try { await sendPasswordResetEmail(auth, $("em").value); err("Password reset email sent"); } catch(e){ err("Enter your email first"); } };
 window.doLogout = () => signOut(auth).then(()=>location.reload());
 window.sendWA = () => {
-  const t = `Hello Admin, ${me && me.deviceId !== dev && me.approved ? "I am logging in from a NEW DEVICE and need approval." : "I need access to the AVCOE Study Material."}\nName: ${me?.name||""}\nEmail: ${auth.currentUser.email}\nDevice Code: ${dev}`;
+  const t = `Hello Admin, ${me && me.deviceId !== dev && me.approved ? "I am logging in from a NEW DEVICE and need approval." : "I have paid ₹15 for lifetime access to the AVCOE Study Material. Payment screenshot attached."}\nName: ${me?.name||""}\nEmail: ${auth.currentUser.email}\nDevice Code: ${dev}`;
   window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(t)}`, "_blank");
 };
 
@@ -188,6 +211,8 @@ onAuthStateChanged(auth, async u => {
   let s = await getDoc(r);
   if (!s.exists()) { await setDoc(r, { name:u.email.split("@")[0], email:u.email, deviceId:dev, approved:false, createdAt:serverTimestamp() }); s = await getDoc(r); }
   me = s.data();
+  $("paybox").classList.toggle("hide", !!me.approved);
+  $("wab").textContent = me.approved ? "📲 Request Access on WhatsApp" : "📲 Send Payment Screenshot on WhatsApp";
   if (me.deviceId !== dev) {
     $("ptitle").textContent = "📵 New device detected";
     $("ptext").textContent = "Your account is linked to another device. Send this code to the admin to approve this device.";
