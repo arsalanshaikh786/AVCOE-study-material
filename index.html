@@ -50,7 +50,8 @@ button.g{background:#25d366;color:#04210f}button.r{background:#e5484d}button.s{b
 #zl,#pg{min-width:40px;text-align:center;font-size:13px}
 #vtog{position:fixed;top:max(6px,env(safe-area-inset-top));right:8px;z-index:6;opacity:.55;padding:4px 12px;border-radius:99px;font-size:14px}#vtog:active{opacity:1}
 #pages{width:100%;margin:0 auto}#pages canvas{display:block;margin:10px 0;width:100%;height:auto;pointer-events:none}#pages.night canvas{filter:invert(1) hue-rotate(180deg)}
-#wm{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-wrap:wrap;overflow:hidden;opacity:.13;font-size:13px;transform:rotate(-20deg) scale(1.6);color:#fff}#wm span{padding:26px 34px}
+#wm{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-wrap:wrap;overflow:hidden;opacity:.2;font-size:13px;transform:rotate(-20deg) scale(1.6);color:#fff;animation:wmv 20s linear infinite alternate}
+@keyframes wmv{to{transform:rotate(-20deg) scale(1.6) translate(-70px,-45px)}}#wm span{padding:26px 34px}
 #shield{position:fixed;inset:0;background:#000;color:#fff;z-index:99;display:flex;align-items:center;justify-content:center;font-size:18px}
 @media(max-width:640px){
  .wrap{padding:12px}input{font-size:16px}h1{font-size:23px}
@@ -282,15 +283,22 @@ vw.addEventListener("scroll", () => {
 });
 
 async function openFile(n){
-  curFile = null; localStorage.last = n.id; $("prog").style.width = "0";
+  toast("🔒 Your ID is embedded in every page"); curFile = null; localStorage.last = n.id; $("prog").style.width = "0";
   $("viewer").classList.remove("hide"); document.body.style.overflow = "hidden";
   $("vtitle").textContent = n.name; $("pages").innerHTML = "<p style='padding:30px;text-align:center'>Loading…</p>";
   $("wm").innerHTML = Array(120).fill(`<span>${esc(auth.currentUser.email)} • ${dev}</span>`).join("");
   const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const stamp = c => {
+    const x = c.getContext("2d"), L = auth.currentUser.email + "  •  " + dev + "  •  " + new Date().toLocaleString(), fs = Math.max(14, c.width/38);
+    x.save(); x.font = "600 " + fs + "px sans-serif"; x.fillStyle = "rgba(130,130,130,.28)"; x.rotate(-0.35);
+    const w = x.measureText(L).width + fs*2;
+    for (let yy = -c.width; yy < c.height + c.width; yy += fs*4) for (let xx = -c.height; xx < c.width + c.height; xx += w) x.fillText(L, xx + ((yy/(fs*4))%2)*w/2, yy);
+    x.restore();
+  };
   const addImg = async blob => {
     const bmp = await createImageBitmap(blob);
     const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height;
-    c.getContext("2d").drawImage(bmp,0,0); $("pages").appendChild(c);
+    c.getContext("2d").drawImage(bmp,0,0); stamp(c); $("pages").appendChild(c);
   };
   try {
     if (n.kind !== "pdf") {
@@ -305,7 +313,7 @@ async function openFile(n){
         for (let i=1;i<=pdf.numPages;i++){
           const p = await pdf.getPage(i), vp = p.getViewport({ scale:1.4*dpr });
           const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
-          $("pages").appendChild(c); await p.render({ canvasContext:c.getContext("2d"), viewport:vp }).promise;
+          $("pages").appendChild(c); await p.render({ canvasContext:c.getContext("2d"), viewport:vp }).promise; stamp(c);
         }
       } else {
         // Fallback: Cloudinary renders PDF pages as JPG images
@@ -357,6 +365,7 @@ document.addEventListener("keydown", e => {
     e.preventDefault(); if (e.key==="PrintScreen") navigator.clipboard?.writeText("Screenshots are not allowed");
   }
 });
+document.addEventListener("keyup", e => { if (e.key === "PrintScreen") { navigator.clipboard?.writeText("Screenshots are not allowed"); sh(true); setTimeout(() => sh(false), 1500); } });
 const sh = on => { if (!$("viewer").classList.contains("hide")) $("shield").classList.toggle("hide", !on); };
 document.addEventListener("visibilitychange", () => sh(document.hidden));
 window.addEventListener("blur", () => sh(true));
